@@ -1,0 +1,85 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\projects\\2022_CCG_Assignment_1_skeleton\\CutGraph_Save_1\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{8D75EB35-E6D0-47D6-80E6-FE6F50C8F707}|CutGraph_Save_1\\CutGraph_Save_1.vcxproj|C:\\projects\\2022_CCG_Assignment_1_skeleton\\CutGraph_Save_1\\CutGraph_Save_1\\CutGraph.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{8D75EB35-E6D0-47D6-80E6-FE6F50C8F707}|CutGraph_Save_1\\CutGraph_Save_1.vcxproj|solutionrelative:CutGraph_Save_1\\CutGraph.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8D75EB35-E6D0-47D6-80E6-FE6F50C8F707}|CutGraph_Save_1\\CutGraph_Save_1.vcxproj|C:\\projects\\2022_CCG_Assignment_1_skeleton\\CutGraph_Save_1\\CutGraph_Save_1\\Viewer.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{8D75EB35-E6D0-47D6-80E6-FE6F50C8F707}|CutGraph_Save_1\\CutGraph_Save_1.vcxproj|solutionrelative:CutGraph_Save_1\\Viewer.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8D75EB35-E6D0-47D6-80E6-FE6F50C8F707}|CutGraph_Save_1\\CutGraph_Save_1.vcxproj|C:\\projects\\2022_CCG_Assignment_1_skeleton\\CutGraph_Save_1\\CutGraph_Save_1\\CutGraph.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{8D75EB35-E6D0-47D6-80E6-FE6F50C8F707}|CutGraph_Save_1\\CutGraph_Save_1.vcxproj|solutionrelative:CutGraph_Save_1\\CutGraph.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8D75EB35-E6D0-47D6-80E6-FE6F50C8F707}|CutGraph_Save_1\\CutGraph_Save_1.vcxproj|C:\\projects\\2022_CCG_Assignment_1_skeleton\\CutGraph_Save_1\\CutGraph_Save_1\\CutGraphMesh.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{8D75EB35-E6D0-47D6-80E6-FE6F50C8F707}|CutGraph_Save_1\\CutGraph_Save_1.vcxproj|solutionrelative:CutGraph_Save_1\\CutGraphMesh.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 3,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "CutGraphMesh.h",
+              "DocumentMoniker": "C:\\projects\\2022_CCG_Assignment_1_skeleton\\CutGraph_Save_1\\CutGraph_Save_1\\CutGraphMesh.h",
+              "RelativeDocumentMoniker": "CutGraph_Save_1\\CutGraphMesh.h",
+              "ToolTip": "C:\\projects\\2022_CCG_Assignment_1_skeleton\\CutGraph_Save_1\\CutGraph_Save_1\\CutGraphMesh.h",
+              "RelativeToolTip": "CutGraph_Save_1\\CutGraphMesh.h",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAALYAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-03-09T03:09:31.697Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "CutGraph.h",
+              "DocumentMoniker": "C:\\projects\\2022_CCG_Assignment_1_skeleton\\CutGraph_Save_1\\CutGraph_Save_1\\CutGraph.h",
+              "RelativeDocumentMoniker": "CutGraph_Save_1\\CutGraph.h",
+              "ToolTip": "C:\\projects\\2022_CCG_Assignment_1_skeleton\\CutGraph_Save_1\\CutGraph_Save_1\\CutGraph.h",
+              "RelativeToolTip": "CutGraph_Save_1\\CutGraph.h",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAD8AAAAYAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-03-09T03:09:40.21Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Viewer.cpp",
+              "DocumentMoniker": "C:\\projects\\2022_CCG_Assignment_1_skeleton\\CutGraph_Save_1\\CutGraph_Save_1\\Viewer.cpp",
+              "RelativeDocumentMoniker": "CutGraph_Save_1\\Viewer.cpp",
+              "ToolTip": "C:\\projects\\2022_CCG_Assignment_1_skeleton\\CutGraph_Save_1\\CutGraph_Save_1\\Viewer.cpp",
+              "RelativeToolTip": "CutGraph_Save_1\\Viewer.cpp",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAANgCAAABAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-03-09T03:08:45.232Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "CutGraph.cpp",
+              "DocumentMoniker": "C:\\projects\\2022_CCG_Assignment_1_skeleton\\CutGraph_Save_1\\CutGraph_Save_1\\CutGraph.cpp",
+              "RelativeDocumentMoniker": "CutGraph_Save_1\\CutGraph.cpp",
+              "ToolTip": "C:\\projects\\2022_CCG_Assignment_1_skeleton\\CutGraph_Save_1\\CutGraph_Save_1\\CutGraph.cpp",
+              "RelativeToolTip": "CutGraph_Save_1\\CutGraph.cpp",
+              "ViewState": "AQIAAKUAAAAAAAAAAAAAAMgAAAAIAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-03-09T03:09:45.977Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
