@@ -1,0 +1,9 @@
+Vertex 1  1 0 0.1
+Vertex 2  0 1 -0.1
+Vertex 3  -1 0 0.1
+Vertex 4  0 -1 -0.1
+Vertex 5  0 0 1
+Face 1  1 2 5
+Face 2  2 3 5
+Face 3  3 4 5
+Face 4  4 1 5
