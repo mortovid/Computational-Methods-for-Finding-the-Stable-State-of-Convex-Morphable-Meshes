@@ -163,11 +163,14 @@
                     float l02 = (proj0 - proj2).norm();
                     float l12 = (proj1 - proj2).norm();
 
-                    result += std::acos((l01 * l01 + l02 * l02 - l12 * l12) / (2 * l01 * l02)); // here
+                    float cosine = (l01 * l01 + l02 * l02 - l12 * l12) / (2 * l01 * l02);
+                    cosine = std::min(1.0f, std::max(-1.0f, cosine));
+                    result += std::acos(cosine);
+                    //result += std::acos((l01 * l01 + l02 * l02 - l12 * l12) / (2 * l01 * l02)); // here
                 }
 
                 v0->curvature() = std::atan(1) * 8 - result;
-                if (v0->curvature() < -0.000001) {
+                if (v0->curvature() < -0.00001) {
                     std::cout << "\nNegative curvature: " << std::atan(1) * 8 - result << ")\n";
                     std::cout << "ID " << v0->id() << ": (" << v0->point()(0) << ", " << v0->point()(1) << ", " << v0->point()(2) << "), " << v0->height() << "\n \n";
                     for (CCutGraphMesh::VertexVertexIterator vviter(v0); !vviter.end(); ++vviter) {
@@ -185,29 +188,40 @@
         }
     }
 
-    void MeshLib::CCutGraph::compDihedralVertAngles() { // REDO
+    void MeshLib::CCutGraph::compDihedralVertAngles() {
         for (CCutGraphMesh::MeshVertexIterator viter(m_pMesh); !viter.end(); ++viter) {
             CCutGraphVertex* v0 = *viter;
             for (CCutGraphMesh::VertexInHalfedgeIterator heiter(m_pMesh, v0); !heiter.end(); ++heiter) {
                 CCutGraphHalfEdge* he = *heiter;
-
-                CCutGraphVertex* v1 = m_pMesh->idVertex(he->target()->id());
+    
+                // Correct the logic: he->source() is v1, not he->target()
+                CCutGraphVertex* v1 = m_pMesh->idVertex(he->source()->id());
                 CCutGraphVertex* v2 = m_pMesh->idVertex(he->he_prev()->source()->id());
-
+    
                 CPoint proj0, proj1, proj2;
                 embed(*v0, *v1, *v2, &proj0, &proj1, &proj2);
-
+    
+                // Adjust Z based on height differences
                 proj1[2] += v1->height() - v0->height();
                 proj2[2] += v2->height() - v0->height();
-
-                // common edge is 01
-
+    
+                // Use vector from v0 to v1
+                CPoint vec = proj1 - proj0;
+                float norm = vec.norm();
+                if (norm < 1e-6) {
+                    he->vertAngle() = 0;
+                    continue;
+                }
+    
                 CPoint vecb0(0, 0, -1);
-
-                he->vertAngle() = std::acos((vecb0 * proj1) / proj1.norm());
+                float dot = (vecb0 * vec) / norm;
+                dot = std::max(-1.0f, std::min(1.0f, dot)); // Clamp to avoid NaN
+    
+                he->vertAngle() = std::acos(dot);
             }
         }
     }
+    
 
     void MeshLib::CCutGraph::compEdgePower() { // REDO
         for (CCutGraphMesh::MeshHalfEdgeIterator heiter(m_pMesh); !heiter.end(); ++heiter) {

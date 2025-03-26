@@ -37,7 +37,7 @@ void setupObject(void)
 
     glTranslated(g_obj_trans[0], g_obj_trans[1], g_obj_trans[2]);
     g_obj_rot.convert(rot);
-    glMultMatrixd((GLdouble*) rot);
+    glMultMatrixd((GLdouble*)rot);
 }
 
 /*! the eye is always fixed at world z = +5 */
@@ -50,8 +50,8 @@ void setupEye(void)
 /*! setup light */
 void setupLight()
 {
-    GLfloat lightOnePosition[4] = {0, 0, 1, 0};
-    GLfloat lightTwoPosition[4] = {0, 0, -1, 0};
+    GLfloat lightOnePosition[4] = { 0, 0, 1, 0 };
+    GLfloat lightTwoPosition[4] = { 0, 0, -1, 0 };
     glLightfv(GL_LIGHT1, GL_POSITION, lightOnePosition);
     glLightfv(GL_LIGHT2, GL_POSITION, lightTwoPosition);
 }
@@ -74,12 +74,12 @@ void drawMesh()
             CPoint n;
             switch (g_shade_flag)
             {
-                case 0:
-                    n = pF->normal();
-                    break;
-                case 1:
-                    n = pV->normal();
-                    break;
+            case 0:
+                n = pF->normal();
+                break;
+            case 1:
+                n = pV->normal();
+                break;
             }
             glNormal3d(n[0], n[1], n[2]);
             glVertex3d(p[0], p[1], p[2]);
@@ -126,7 +126,7 @@ void display()
     drawSharpEdges();
     /* draw the mesh */
     drawMesh();
-    
+
     glPopMatrix();
     glutSwapBuffers();
 }
@@ -135,19 +135,19 @@ void display()
 void reshape(int w, int h)
 {
     float ar;
-    
+
     g_win_width = w;
     g_win_height = h;
 
-    ar = (float) (w) / h;
+    ar = (float)(w) / h;
     glViewport(0, 0, w, h); /* Set Viewport */
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
     gluPerspective(40.0, /* field of view in degrees */
-                   ar,   /* aspect ratio */
-                   0.1,  /* Z near */
-                   100.0 /* Z far */);
+        ar,   /* aspect ratio */
+        0.1,  /* Z near */
+        100.0 /* Z far */);
 
     glMatrixMode(GL_MODELVIEW);
 
@@ -169,26 +169,26 @@ void keyBoard(unsigned char key, int x, int y)
 {
     switch (key)
     {
-        case 'f':
-            // Flat Shading
-            glPolygonMode(GL_FRONT, GL_FILL);
-            g_shade_flag = 0;
-            break;
-        case 's':
-            // Smooth Shading
-            glPolygonMode(GL_FRONT, GL_FILL);
-            g_shade_flag = 1;
-            break;
-        case 'w':
-            // Wireframe mode
-            glPolygonMode(GL_FRONT, GL_LINE);
-            break;
-        case '?':
-            help();
-            break;
-        case 27:
-            exit(0);
-            break;
+    case 'f':
+        // Flat Shading
+        glPolygonMode(GL_FRONT, GL_FILL);
+        g_shade_flag = 0;
+        break;
+    case 's':
+        // Smooth Shading
+        glPolygonMode(GL_FRONT, GL_FILL);
+        g_shade_flag = 1;
+        break;
+    case 'w':
+        // Wireframe mode
+        glPolygonMode(GL_FRONT, GL_LINE);
+        break;
+    case '?':
+        help();
+        break;
+    case 27:
+        exit(0);
+        break;
     }
     glutPostRedisplay();
 }
@@ -196,10 +196,10 @@ void keyBoard(unsigned char key, int x, int y)
 /*! setup GL states */
 void setupGLstate()
 {
-    GLfloat lightOneColor[] = {1, 1, 1, 1.0};
-    GLfloat globalAmb[] = {.1, .1, .1, 1};
-    GLfloat lightOnePosition[] = {.0, 0.0, 1.0, 1.0};
-    GLfloat lightTwoPosition[] = {.0, 0.0, -1.0, 1.0};
+    GLfloat lightOneColor[] = { 1, 1, 1, 1.0 };
+    GLfloat globalAmb[] = { .1, .1, .1, 1 };
+    GLfloat lightOnePosition[] = { .0, 0.0, 1.0, 1.0 };
+    GLfloat lightTwoPosition[] = { .0, 0.0, -1.0, 1.0 };
 
     glEnable(GL_CULL_FACE);
     glFrontFace(GL_CCW);
@@ -221,14 +221,14 @@ void setupGLstate()
     glLightfv(GL_LIGHT1, GL_POSITION, lightOnePosition);
     glLightfv(GL_LIGHT2, GL_POSITION, lightTwoPosition);
 
-    const GLfloat specular[] = {1.0f, 1.0f, 1.0f, 1.0f};
+    const GLfloat specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
     glLightfv(GL_LIGHT1, GL_SPECULAR, specular);
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 64.0f);
 
-    GLfloat mat_ambient[] = {0.0f, 0.0f, 0.0f, 1.0f};
-    GLfloat mat_diffuse[] = {0.01f, 0.01f, 0.01f, 1.0f};
-    GLfloat mat_specular[] = {0.5f, 0.5f, 0.5f, 1.0f};
-    GLfloat mat_shininess[] = {32};
+    GLfloat mat_ambient[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    GLfloat mat_diffuse[] = { 0.01f, 0.01f, 0.01f, 1.0f };
+    GLfloat mat_specular[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+    GLfloat mat_shininess[] = { 32 };
 
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
@@ -245,10 +245,10 @@ void mouseClick(int button, int state, int x, int y)
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
     {
         g_button = GLUT_LEFT_BUTTON;
-        g_arcball = CArcball(g_win_width, 
-                             g_win_height, 
-                             x - g_win_width / 2, 
-                             g_win_height - y - g_win_height / 2);
+        g_arcball = CArcball(g_win_width,
+            g_win_height,
+            x - g_win_width / 2,
+            g_win_height - y - g_win_height / 2);
     }
 
     if (button == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN)
@@ -377,6 +377,7 @@ void computeNormal(CCutGraphMesh* pMesh)
         n = n / n.norm();
         v->normal() = n;
     }
+    std::cout << "Cal Norm Completed\n";
 };
 
 void initOpenGL(int argc, char* argv[])
@@ -400,6 +401,7 @@ void initOpenGL(int argc, char* argv[])
 
 void cut_graph(CCutGraphMesh* pMesh)
 {
+    
     CCutGraph cg(pMesh);
     cg.cut_graph();
     std::cout << "Done with cutgraph. \n";
@@ -430,7 +432,7 @@ Eigen::VectorXf computeGrad(CCutGraphMesh* p_mesh) {
 }
 
 /*! Computes the Hessian matrix */
-Eigen::MatrixXf computeHessian(CCutGraphMesh* p_mesh) { // REDO
+Eigen::MatrixXf computeHessian(CCutGraphMesh* p_mesh) {
     Eigen::MatrixXf hessian = Eigen::MatrixXf::Zero(p_mesh->numVertices(), p_mesh->numVertices());
     for (CCutGraphMesh::MeshVertexIterator viter1(p_mesh); !viter1.end(); ++viter1) {
         CCutGraphVertex* v1 = *viter1;
@@ -473,8 +475,8 @@ int main(int argc, char* argv[])
     computeNormal(&g_mesh);
     cut_graph(&g_mesh);
     CCutGraph vc(&g_mesh);
-    
-    // REDO
+
+
     Eigen::MatrixXf hess = computeHessian(&g_mesh); // initial Hessian matrix
     // std::cout << hess << "\n \n";
     Eigen::VectorXf grad = computeGrad(&g_mesh); // initial gradient
@@ -494,7 +496,7 @@ int main(int argc, char* argv[])
 
     int numIters = 1;
 
-    while (grad.maxCoeff() > 0.0001) { // REDO
+    while (grad.maxCoeff() > 0.0001) {
         numIters++;
 
         float maxHeight = 0;
@@ -513,7 +515,7 @@ int main(int argc, char* argv[])
         for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
             CCutGraphVertex* v = *viter;
             v->height() += stepSize * addToHeights(v->id() - 1);
-            maxHeight = std::max(maxHeight, v->height()); 
+            maxHeight = std::max(maxHeight, v->height());
         }
 
         vc.compCurvature();
@@ -523,7 +525,7 @@ int main(int argc, char* argv[])
         hess = computeHessian(&g_mesh);
         grad = computeGrad(&g_mesh);
         addToHeights = hess.ldlt().solve(grad);
-            
+
         std::cout << "Iteration " << numIters << ": the TSC is " << TSC << ", the max coeff is " << grad.maxCoeff() << ", the max diff is " << addToHeights.maxCoeff() << ", the min diff is " << addToHeights.minCoeff() << ", and the maximum height is " << maxHeight << ". \n";
         // if (numIters == 3767) { break; };
     }
@@ -700,7 +702,7 @@ int main(int argc, char* argv[])
     for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
         CCutGraphVertex* v = *viter;
         v->embPoint()[2] = v->height();
-    } 
+    }
 
     for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
         CCutGraphVertex* v = *viter;
@@ -724,6 +726,6 @@ int main(int argc, char* argv[])
     output.close();
 
     initOpenGL(argc, argv);
-    
+
     return EXIT_SUCCESS;
 }
