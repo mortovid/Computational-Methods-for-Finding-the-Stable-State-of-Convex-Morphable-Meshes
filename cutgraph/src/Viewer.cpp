@@ -401,7 +401,7 @@ void initOpenGL(int argc, char* argv[])
 
 void cut_graph(CCutGraphMesh* pMesh)
 {
-    
+
     CCutGraph cg(pMesh);
     cg.cut_graph();
     std::cout << "Done with cutgraph. \n";
@@ -432,8 +432,28 @@ Eigen::VectorXf computeGrad(CCutGraphMesh* p_mesh) {
 }
 
 /*! Computes the Hessian matrix */
+// Eigen::MatrixXf computeHessian(CCutGraphMesh* p_mesh) {
+//     Eigen::MatrixXf hessian = Eigen::MatrixXf::Zero(p_mesh->numVertices(), p_mesh->numVertices());
+//     for (CCutGraphMesh::MeshVertexIterator viter1(p_mesh); !viter1.end(); ++viter1) {
+//         CCutGraphVertex* v1 = *viter1;
+
+//         for (CCutGraphMesh::VertexInHalfedgeIterator vheiter(p_mesh, v1); !vheiter.end(); ++vheiter) {
+//             CCutGraphHalfEdge* he = *vheiter;
+//             CVertex* v2 = he->source();
+
+//             hessian(v1->id() - 1, v1->id() - 1) -= he->power();
+
+//             if (!v1->boundary() && !v2->boundary()) {
+//                 hessian(v1->id() - 1, v2->id() - 1) = he->power();
+//             }
+//         }
+//     }
+//     return hessian;
+// }
+/*! Computes the Hessian matrix */
 Eigen::MatrixXf computeHessian(CCutGraphMesh* p_mesh) {
     Eigen::MatrixXf hessian = Eigen::MatrixXf::Zero(p_mesh->numVertices(), p_mesh->numVertices());
+
     for (CCutGraphMesh::MeshVertexIterator viter1(p_mesh); !viter1.end(); ++viter1) {
         CCutGraphVertex* v1 = *viter1;
 
@@ -441,15 +461,30 @@ Eigen::MatrixXf computeHessian(CCutGraphMesh* p_mesh) {
             CCutGraphHalfEdge* he = *vheiter;
             CVertex* v2 = he->source();
 
-            hessian(v1->id() - 1, v1->id() - 1) -= he->power();
+            float w = he->power();
 
+            // Safety check for invalid weights
+            if (!std::isfinite(w) || std::isnan(w)) {
+                // std::cerr << "[WARNING] Invalid power value detected: "
+                //           << w << " at halfedge ("
+                //           << v2->id() << " -> " << v1->id() << ")" << std::endl;
+                // continue;
+            }
+
+            // Accumulate diagonal
+            hessian(v1->id() - 1, v1->id() - 1) -= w;
+
+            // Fill off-diagonal only if both are interior vertices
             if (!v1->boundary() && !v2->boundary()) {
-                hessian(v1->id() - 1, v2->id() - 1) = he->power();
+                hessian(v1->id() - 1, v2->id() - 1) = w;
             }
         }
     }
+
     return hessian;
 }
+
+
 
 /*! main function for viewer */
 int main(int argc, char* argv[])
@@ -478,11 +513,24 @@ int main(int argc, char* argv[])
 
 
     Eigen::MatrixXf hess = computeHessian(&g_mesh); // initial Hessian matrix
+    if (!hess.allFinite()) {
+        std::cerr << "[ERROR] Hessian contains invalid values.\n";
+        //return EXIT_FAILURE;
+    }
     // std::cout << hess << "\n \n";
     Eigen::VectorXf grad = computeGrad(&g_mesh); // initial gradient
+    if (!grad.allFinite()) {
+        std::cerr << "[ERROR] Gradient contains invalid values.\n";
+        //return EXIT_FAILURE;
+    }
     // std::cout << grad << "\n \n";
     Eigen::VectorXf addToHeights = hess.ldlt().solve(grad);
     Eigen::VectorXf addToHeightsOrig = hess.llt().solve(grad);
+    if (!addToHeights.allFinite() || !addToHeightsOrig.allFinite()) {
+        std::cerr << "[ERROR] Solution vector contains invalid values.\n";
+        //return EXIT_FAILURE;
+    }
+    
     float scaleFactor = addToHeightsOrig.maxCoeff() / addToHeights.maxCoeff();
     addToHeights *= scaleFactor;
     for (int i = 0; i < g_mesh.numVertices(); i++) {
