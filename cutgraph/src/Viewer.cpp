@@ -495,13 +495,19 @@ int main(int argc, char* argv[])
             std::cout << "max of " << max << " is too small \n";
             break;
         }
+        printf("max is %f \n", max);
         float stepSize = 0.001 / max;
+        printf("step size is %f \n", stepSize);
 
         float maxHeight = 0;
         for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
             CCutGraphVertex* v = *viter;
-            v->height() += stepSize * addToHeights(v->id() - 1);
-            maxHeight = std::max(maxHeight, v->height()); 
+            if (!v->boundary()) {
+                if (v->curvature() > 0) {
+                    v->height() += stepSize * addToHeights(v->id() - 1);
+                }
+                maxHeight = std::max(maxHeight, v->height()); 
+            }
         }
 
         vc.compCurvature();
