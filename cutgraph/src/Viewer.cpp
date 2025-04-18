@@ -430,24 +430,214 @@ Eigen::VectorXf computeGrad(CCutGraphMesh* p_mesh) {
 }
 
 /*! Computes the Hessian matrix */
-Eigen::MatrixXf computeHessian(CCutGraphMesh* p_mesh) { // REDO
+Eigen::MatrixXf computeHessian(CCutGraphMesh* p_mesh) {
     Eigen::MatrixXf hessian = Eigen::MatrixXf::Zero(p_mesh->numVertices(), p_mesh->numVertices());
+
     for (CCutGraphMesh::MeshVertexIterator viter1(p_mesh); !viter1.end(); ++viter1) {
         CCutGraphVertex* v1 = *viter1;
+        int i = v1->id() - 1;
 
         for (CCutGraphMesh::VertexInHalfedgeIterator vheiter(p_mesh, v1); !vheiter.end(); ++vheiter) {
             CCutGraphHalfEdge* he = *vheiter;
-            CVertex* v2 = he->source();
+            CCutGraphVertex* v2 = static_cast<CCutGraphVertex*>(he->source());
+            int j = v2->id() - 1;
 
-            hessian(v1->id() - 1, v1->id() - 1) -= he->power();
+            float w = he->power();
+
+            // Diagonal contribution
+            hessian(i, i) -= w;
 
             if (!v1->boundary() && !v2->boundary()) {
-                hessian(v1->id() - 1, v2->id() - 1) = he->power();  
+                // Off-diagonal contributions (symmetric)
+                hessian(i, j) += w;
+                hessian(j, i) += w;
+                hessian(j, j) -= w;
             }
         }
     }
+
     return hessian;
 }
+
+
+void exportHeightColoredOBJ(CCutGraphMesh* mesh, const std::string& filename) {
+    float minH = std::numeric_limits<float>::max();
+    float maxH = std::numeric_limits<float>::lowest();
+
+    // Step 1: Find height range
+    for (CCutGraphMesh::MeshVertexIterator viter(mesh); !viter.end(); ++viter) {
+        float h = (*viter)->height();
+        if (!std::isfinite(h)) continue;
+        minH = std::min(minH, h);
+        maxH = std::max(maxH, h);
+    }
+
+    float range = maxH - minH;
+    if (range < 1e-6f) range = 1.0f; // avoid divide-by-zero
+
+    std::ofstream out(filename);
+    if (!out) {
+        std::cerr << "Failed to open " << filename << "\n";
+        return;
+    }
+
+    out << "# Exported mesh with per-vertex height as color\n";
+
+    // Step 2: Write vertices with color
+    for (CCutGraphMesh::MeshVertexIterator viter(mesh); !viter.end(); ++viter) {
+        CCutGraphVertex* v = *viter;
+        CPoint p = v->point();
+        float h = (v->height() - minH) / range;  // normalize to [0, 1]
+
+        // Use heatmap-style RGB (or grayscale if preferred)
+        float r = h;
+        float g = 0.2f * (1.0f - h);
+        float b = 1.0f - h;
+
+        out << "v " << p[0] << " " << p[1] << " " << p[2] << " " << r << " " << g << " " << b << "\n";
+    }
+
+    // Step 3: Write face data
+    for (CCutGraphMesh::MeshFaceIterator fiter(mesh); !fiter.end(); ++fiter) {
+        CCutGraphFace* f = *fiter;
+        std::vector<int> vids;
+        for (CCutGraphMesh::FaceVertexIterator fviter(f); !fviter.end(); ++fviter) {
+            vids.push_back((*fviter)->id());
+        }
+        if (vids.size() >= 3) {
+            out << "f";
+            for (int vi : vids)
+                out << " " << vi;
+            out << "\n";
+        }
+    }
+
+    out.close();
+    std::cout << "OBJ with height coloring written to: " << filename << "\n";
+}
+
+
+void optimizeHeightsWithDampingAndLineSearch(CCutGraphMesh* mesh, CCutGraph& graph, float epsilon = 1e-4f, int maxIters = 100) {
+    Eigen::MatrixXf hess = computeHessian(mesh);
+    Eigen::VectorXf grad = computeGrad(mesh);
+
+    std::stringstream filename;
+    filename << "pyramid_plus.obj";
+    exportHeightColoredOBJ(mesh, filename.str());
+
+    float lambda = 1e-3f; // initial damping
+    int iter = 1;
+
+    while (grad.norm() > epsilon && iter <= maxIters) {
+        Eigen::MatrixXf H_damped = hess + lambda * Eigen::MatrixXf::Identity(hess.rows(), hess.cols());
+        Eigen::VectorXf direction = -H_damped.llt().solve(grad);  // descent direction
+
+        // === Clamp Newton step for stability ===
+        float maxStep = 0.05f;
+        float stepNorm = direction.lpNorm<Eigen::Infinity>();
+        if (stepNorm > maxStep) {
+            direction *= maxStep / stepNorm;
+        }
+
+        float TSC_init = graph.compTSC();
+        float directional_derivative = grad.dot(direction);
+
+        float alpha = 1.0f;
+        float rho = 0.5f;
+        float c = 1e-4f;
+        bool stepAccepted = false;
+
+        // Backup original heights
+        std::unordered_map<int, float> originalHeights;
+        for (CCutGraphMesh::MeshVertexIterator viter(mesh); !viter.end(); ++viter) {
+            CCutGraphVertex* v = *viter;
+            originalHeights[v->id()] = v->height();
+        }
+
+        // === Backtracking Line Search ===
+        while (alpha > 1e-6f) {
+            for (CCutGraphMesh::MeshVertexIterator viter(mesh); !viter.end(); ++viter) {
+                CCutGraphVertex* v = *viter;
+                if (!v->boundary() && v->curvature() > 0) {
+                    v->height() = originalHeights[v->id()] + alpha * direction(v->id() - 1);
+                }
+            }
+
+            graph.compCurvature();
+            graph.compDihedralVertAngles();
+            graph.compEdgePower();
+            float TSC_new = graph.compTSC();
+
+            if (std::isfinite(TSC_new) && TSC_new < TSC_init + c * alpha * directional_derivative) {
+                stepAccepted = true;
+                break; // step accepted
+            }
+
+            // Restore and try smaller step
+            for (auto& [id, h] : originalHeights) {
+                mesh->idVertex(id)->height() = h;
+            }
+            alpha *= rho;
+        }
+
+        if (!stepAccepted) {
+            std::cout << "Line search failed at iteration " << iter << ". Exiting.\n";
+            break;
+        }
+
+        // === Push height into mesh z-coordinate ===
+        for (CCutGraphMesh::MeshVertexIterator viter(mesh); !viter.end(); ++viter) {
+            CCutGraphVertex* v = *viter;
+            CPoint& p = v->point();
+            p[2] = v->height();  // update z-coordinate to match height
+        }
+
+        // Update Hessian and gradient
+        hess = computeHessian(mesh);
+        grad = computeGrad(mesh);
+
+        // Damping control
+        if (alpha < 0.2f) lambda *= 10.0f;
+        else if (alpha > 0.8f) lambda *= 0.5f;
+        lambda = std::max(lambda, 1e-4f); // prevent underflow
+
+        // === Logging and export every 10 iters ===
+        if (iter % 10 == 0) {
+            float minH = std::numeric_limits<float>::max();
+            float maxH = -minH;
+            for (CCutGraphMesh::MeshVertexIterator viter(mesh); !viter.end(); ++viter) {
+                CCutGraphVertex* v = *viter;
+                minH = std::min(minH, v->height());
+                maxH = std::max(maxH, v->height());
+            }
+
+            std::cout << "Iter " << iter << ": TSC = " << graph.compTSC()
+                      << ", grad norm = " << grad.norm()
+                      << ", max grad = " << grad.lpNorm<Eigen::Infinity>()
+                      << ", step size = " << alpha
+                      << ", lambda = " << lambda
+                      << ", height range = [" << minH << ", " << maxH << "]\n";
+
+            std::stringstream filename;
+            filename << "output_height_colored_iter_" << iter << ".obj";
+            exportHeightColoredOBJ(mesh, filename.str());
+        }
+
+        iter++;
+    }
+
+    // Final height-to-z sync and export
+    for (CCutGraphMesh::MeshVertexIterator viter(mesh); !viter.end(); ++viter) {
+        CCutGraphVertex* v = *viter;
+        v->point()[2] = v->height();
+    }
+    exportHeightColoredOBJ(mesh, "output_height_colored_final.obj");
+
+    std::cout << "Optimization complete after " << iter - 1 << " iterations.\n";
+}
+
+
+
 
 /*! main function for viewer */
 int main(int argc, char* argv[])
@@ -473,55 +663,56 @@ int main(int argc, char* argv[])
     computeNormal(&g_mesh);
     cut_graph(&g_mesh);
     CCutGraph vc(&g_mesh);
+    optimizeHeightsWithDampingAndLineSearch(&g_mesh, vc);
     
-    // REDO
-    Eigen::MatrixXf hess = computeHessian(&g_mesh); // initial Hessian matrix
-    // std::cout << hess << "\n \n";
-    Eigen::VectorXf grad = computeGrad(&g_mesh); // initial gradient
-    // std::cout << grad << "\n \n";
-    Eigen::VectorXf addToHeights = hess.llt().solve(grad);
+    // // REDO
+    // Eigen::MatrixXf hess = computeHessian(&g_mesh); // initial Hessian matrix
+    // // std::cout << hess << "\n \n";
+    // Eigen::VectorXf grad = computeGrad(&g_mesh); // initial gradient
+    // // std::cout << grad << "\n \n";
+    // Eigen::VectorXf addToHeights = hess.llt().solve(grad);
 
-    float TSC = vc.compTSC();
-    std::cout << "Iteration 1: the TSC is " << TSC << ", the max gradient coeff is" << grad.maxCoeff() << ", and the maximum height is 0. \n";
+    // float TSC = vc.compTSC();
+    // std::cout << "Iteration 1: the TSC is " << TSC << ", the max gradient coeff is" << grad.maxCoeff() << ", and the maximum height is 0. \n";
     
-    int numIters = 1;
+    // int numIters = 1;
 
-    while (grad.maxCoeff() > 0.0001) { // REDO
-        float max = 0;
-        for (float i : addToHeights) {
-            max = std::max(max, std::abs(i));
-        }
-        if (std::abs(max) < 0.001) {
-            std::cout << "max of " << max << " is too small \n";
-            break;
-        }
-        printf("max is %f \n", max);
-        float stepSize = 0.001 / max;
-        printf("step size is %f \n", stepSize);
+    // while (grad.norm() > 0.0001) { // REDO
+    //     float max = 0;
+    //     for (float i : addToHeights) {
+    //         max = std::max(max, std::abs(i));
+    //     }
+    //     if (std::abs(max) < 0.0001) {
+    //         std::cout << "max of " << max << " is too small \n";
+    //         break;
+    //     }
+    //     printf("max is %f \n", max);
+    //     float stepSize = 0.001 / max;
+    //     printf("step size is %f \n", stepSize);
 
-        float maxHeight = 0;
-        for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
-            CCutGraphVertex* v = *viter;
-            if (!v->boundary()) {
-                if (v->curvature() > 0) {
-                    v->height() += stepSize * addToHeights(v->id() - 1);
-                }
-                maxHeight = std::max(maxHeight, v->height()); 
-            }
-        }
+    //     float maxHeight = 0;
+    //     for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
+    //         CCutGraphVertex* v = *viter;
+    //         if (!v->boundary()) {
+    //             if (v->curvature() > 0) {
+    //                 v->height() += stepSize * addToHeights(v->id() - 1);
+    //             }
+    //             maxHeight = std::max(maxHeight, v->height()); 
+    //         }
+    //     }
 
-        vc.compCurvature();
-        vc.compDihedralVertAngles();
-        vc.compEdgePower();
-        TSC = vc.compTSC();
-        hess = computeHessian(&g_mesh);
-        grad = computeGrad(&g_mesh);
-        addToHeights = hess.llt().solve(grad);
-        numIters++;
+    //     vc.compCurvature();
+    //     vc.compDihedralVertAngles();
+    //     vc.compEdgePower();
+    //     TSC = vc.compTSC();
+    //     hess = computeHessian(&g_mesh);
+    //     grad = computeGrad(&g_mesh);
+    //     addToHeights = hess.llt().solve(grad);
+    //     numIters++;
         
-        std::cout << "Iteration " << numIters << ": the TSC is " << TSC << ", the max coeff is " << grad.maxCoeff() << ", the max diff is " << addToHeights.maxCoeff() << ", the min diff is " << addToHeights.minCoeff() << ", and the maximum height is " << maxHeight << ". \n";
-        // if (numIters == 3767) { break; };
-    }
+    //     std::cout << "Iteration " << numIters << ": the TSC is " << TSC << ", the max coeff is " << grad.maxCoeff() << ", the max diff is " << addToHeights.maxCoeff() << ", the min diff is " << addToHeights.minCoeff() << ", and the maximum height is " << maxHeight << ". \n";
+    //     // if (numIters == 3767) { break; };
+    // }
 
     /*
     Eigen::VectorXf grad = computeGrad(&g_mesh); // initial gradient
@@ -544,7 +735,7 @@ int main(int argc, char* argv[])
         TSC = vc.compTSC();
         std::cout << "Iteration " << numIters << ": the max is " << *std::max_element(grad.begin(), grad.end()) << " and the TSC is " << TSC << ". \n";
     }  */
-    std::cout << "The final TSC is " << TSC << ". \n";
+    // std::cout << "The final TSC is " << TSC << ". \n";
     std::cout << "The final heights are: \n ( ";
     for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
         CCutGraphVertex* v = *viter;

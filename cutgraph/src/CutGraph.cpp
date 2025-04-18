@@ -262,7 +262,7 @@ void MeshLib::CCutGraph::compEdgePower() {
             float a1 = he->diAngle();
             float a2 = sym_he->diAngle();
             float s1 = std::sin(a1), s2 = std::sin(a2);
-            if (std::abs(s1) < 1e-6f || std::abs(s2) < 1e-6f) {
+            if (std::abs(s1) < 1e-4f || std::abs(s2) < 1e-4f) {
                 he->power() = 0.0f;
                 continue;
             }
