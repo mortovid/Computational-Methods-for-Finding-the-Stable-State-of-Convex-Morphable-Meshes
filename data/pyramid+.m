@@ -1,0 +1,17 @@
+Vertex 1  1 0 0.1
+Vertex 2  0 1 -0.1
+Vertex 3  -1 0 0.1
+Vertex 4  0 -1 -0.1
+Vertex 5  0 0 1
+Vertex 6  0.8 0.8 -0.2
+Vertex 7  -0.8 0.8 -0.2
+Vertex 8  0.8 -0.8 -0.2
+Vertex 9  -0.8 -0.8 -0.2
+Face 1  1 2 5
+Face 2  2 3 5
+Face 3  3 4 5
+Face 4  4 1 5
+Face 5  2 1 6
+Face 6  3 2 7
+Face 7  4 3 9
+Face 6  1 4 8
