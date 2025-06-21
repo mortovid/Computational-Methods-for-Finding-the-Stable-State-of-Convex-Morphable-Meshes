@@ -430,14 +430,14 @@ Eigen::VectorXf computeGrad(CCutGraphMesh* p_mesh) {
 }
 
 /*! Computes the Hessian matrix */
-Eigen::MatrixXf computeHessian(CCutGraphMesh* p_mesh) {
+Eigen::MatrixXf computeHessian(CCutGraphMesh* p_mesh) { // REDO
     Eigen::MatrixXf hessian = Eigen::MatrixXf::Zero(p_mesh->numVertices(), p_mesh->numVertices());
     for (CCutGraphMesh::MeshVertexIterator viter1(p_mesh); !viter1.end(); ++viter1) {
         CCutGraphVertex* v1 = *viter1;
 
-        for (CCutGraphMesh::VertexInHalfedgeIterator vheiter(p_mesh, v1); !vheiter.end(); ++vheiter) {
+        for (CCutGraphMesh::VertexOutHalfedgeIterator vheiter(p_mesh, v1); !vheiter.end(); ++vheiter) {
             CCutGraphHalfEdge* he = *vheiter;
-            CVertex* v2 = he->source();
+            CVertex* v2 = he->target();
 
             hessian(v1->id() - 1, v1->id() - 1) -= he->power();
 
@@ -447,6 +447,79 @@ Eigen::MatrixXf computeHessian(CCutGraphMesh* p_mesh) {
         }
     }
     return hessian;
+}
+
+float gradientDescent() { // output is TSC
+    CCutGraph vc(&g_mesh);
+    Eigen::VectorXf grad = computeGrad(&g_mesh); // initial gradient
+
+    std::cout << "Iteration 1: the max is " << *std::max_element(grad.begin(), grad.end()) << ". \n";
+
+    int numIters = 1;
+    float TSC = 0;
+
+    while (grad.maxCoeff() > 0.0001) {
+        numIters++;
+
+        for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
+            CCutGraphVertex* v = *viter;
+            v->height() += 0.01 * grad(v->id() - 1);
+        }
+        vc.compCurvature();
+
+        grad = computeGrad(&g_mesh);
+        TSC = vc.compTSC();
+        std::cout << "Iteration " << numIters << ": the max is " << *std::max_element(grad.begin(), grad.end()) << " and the TSC is " << TSC << ". \n";
+    }
+    return TSC;
+}
+
+float newtonMethod() { // output is TSC
+    CCutGraph vc(&g_mesh);
+    Eigen::VectorXf grad = computeGrad(&g_mesh); // initial gradient
+    // std::cout << grad << "\n \n";
+    Eigen::MatrixXf hess = computeHessian(&g_mesh); // initial Hessian matrix
+    // std::cout << hess << "\n \n";
+    Eigen::VectorXf addToHeights = hess.llt().solve(grad);
+    // std::cout << addToHeights << "\n \n";
+
+    float TSC = vc.compTSC();
+    std::cout << "Iteration 1: the TSC is " << TSC << ", the max gradient coeff is " << grad.maxCoeff() << ", and the maximum height is 0. \n";
+
+    int numIters = 1;
+
+    while (grad.maxCoeff() > 0.0001) { // REDO
+        float max = 0;
+        for (float i : addToHeights) {
+            max = std::max(max, std::abs(i));
+        }
+        if (std::abs(max) < 0.001) {
+            std::cout << "max of " << max << " is too small \n";
+            break;
+        }
+        float stepSize = 0.001 / max;
+
+        float maxHeight = 0;
+        for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
+            CCutGraphVertex* v = *viter;
+            v->height() += stepSize * addToHeights(v->id() - 1);
+            maxHeight = std::max(maxHeight, v->height());
+        }
+
+        vc.compCurvature();
+        vc.compDihedralVertAngles();
+        vc.compEdgePower();
+        TSC = vc.compTSC();
+        grad = computeGrad(&g_mesh);
+        hess = computeHessian(&g_mesh);
+        addToHeights = hess.llt().solve(grad);
+        numIters++;
+
+        std::cout << "Iteration " << numIters << ": the TSC is " << TSC << ", the max coeff is " << grad.maxCoeff() << ", the max diff is " << addToHeights.maxCoeff() << ", the min diff is " << addToHeights.minCoeff() << ", and the maximum height is " << maxHeight << ". \n";
+        // if (numIters == 1050) { break; };
+    }
+
+    return TSC;
 }
 
 /*! main function for viewer */
@@ -473,82 +546,18 @@ int main(int argc, char* argv[])
     computeNormal(&g_mesh);
     cut_graph(&g_mesh);
     CCutGraph vc(&g_mesh);
-
-
-    Eigen::MatrixXf hess = computeHessian(&g_mesh); // initial Hessian matrix
-    // std::cout << hess << "\n \n";
-    Eigen::VectorXf grad = computeGrad(&g_mesh); // initial gradient
-    // std::cout << grad << "\n \n";
-    Eigen::VectorXf addToHeights = hess.ldlt().solve(grad);
-    Eigen::VectorXf addToHeightsOrig = hess.llt().solve(grad);
-    float scaleFactor = addToHeightsOrig.maxCoeff() / addToHeights.maxCoeff();
-    addToHeights *= scaleFactor;
-    for (int i = 0; i < g_mesh.numVertices(); i++) {
-        if (!g_mesh.idVertex(i + 1)->boundary()) {
-            std::cout << addToHeightsOrig(i) - addToHeights(i) << "\n";
-        }
-    }
-    // std::cout << addToHeights << "\n \n";
-    float TSC = vc.compTSC();
-    std::cout << "Iteration 1: the TSC is " << TSC << ", the max coeff is " << grad.maxCoeff() << ", the max diff is " << addToHeights.maxCoeff() << ", the min diff is " << addToHeights.minCoeff() << ", and the maximum height is 0. \n";
-
-    int numIters = 1;
-
-    while (grad.maxCoeff() > 0.0001) {
-        numIters++;
-
-        float maxHeight = 0;
-        bool posMax = false, negMax = false;
-        float max = 0;
-        for (float i : addToHeights) {
-            max = std::max(max, std::abs(i));
-        }
-        if (std::abs(max) < 0.001) {
-            std::cout << "max of " << max << " is too small \n";
-            break;
-        }
-        float stepSize = 0.001 / max;
-
-        // std::cout << "stepSize = " << stepSize << "\n";
-        for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
-            CCutGraphVertex* v = *viter;
-            v->height() += stepSize * addToHeights(v->id() - 1);
-            maxHeight = std::max(maxHeight, v->height());
-        }
-
-        vc.compCurvature();
-        vc.compDihedralVertAngles();
-        vc.compEdgePower();
-        TSC = vc.compTSC();
-        hess = computeHessian(&g_mesh);
-        grad = computeGrad(&g_mesh);
-        addToHeights = hess.ldlt().solve(grad);
-
-        std::cout << "Iteration " << numIters << ": the TSC is " << TSC << ", the max coeff is " << grad.maxCoeff() << ", the max diff is " << addToHeights.maxCoeff() << ", the min diff is " << addToHeights.minCoeff() << ", and the maximum height is " << maxHeight << ". \n";
-        // if (numIters == 3767) { break; };
-    }
-
-    /*
-    Eigen::VectorXf grad = computeGrad(&g_mesh); // initial gradient
-
-    std::cout << "Iteration 1: the max is " << *std::max_element(grad.begin(), grad.end()) << ". \n";
-
-    int numIters = 1;
     float TSC;
 
-    while (grad.maxCoeff() > 0.0001) {
-        numIters++;
+    std::cout << "Input G for Gradient Descent and N for Newton's Method: ";
+    char method;
+    std::cin >> method;
+    if (method == 'G') {
+        TSC = gradientDescent();
+    }
+    else {
+        TSC = newtonMethod();
+    }
 
-        for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
-            CCutGraphVertex* v = *viter;
-            v->height() += 0.01 * grad(v->id() - 1);
-        }
-        vc.compCurvature();
-
-        grad = computeGrad(&g_mesh);
-        TSC = vc.compTSC();
-        std::cout << "Iteration " << numIters << ": the max is " << *std::max_element(grad.begin(), grad.end()) << " and the TSC is " << TSC << ". \n";
-    }  */
     std::cout << "The final TSC is " << TSC << ". \n";
     std::cout << "The final heights are: \n ( ";
     for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
@@ -638,7 +647,7 @@ int main(int argc, char* argv[])
                     float proj23 = sqrt(pow((v2->point() - v3->point()).norm(), 2) - pow(v2->height() - v3->height(), 2));
 
                     float ang23 = atan2(v3->embPoint()[1] - v2->embPoint()[1], v3->embPoint()[0] - v2->embPoint()[0]);
-                    float ang123 = acos((proj12 * proj12 + proj23 * proj23 - proj13 * proj13) / ((float)2 * proj12 * proj23));
+                    float ang123 = acos((proj12 * proj12 + proj23 * proj23 - proj13 * proj13) / (2 * proj12 * proj23));
                     CPoint emb1 = v2->embPoint() + CPoint{ proj12 * cos(ang23 + ang123), proj12 * sin(ang23 + ang123), 0 };
                     CPoint emb2 = v2->embPoint() + CPoint{ proj12 * cos(ang23 - ang123), proj12 * sin(ang23 - ang123), 0 };
 
