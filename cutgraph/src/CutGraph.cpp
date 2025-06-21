@@ -1,6 +1,8 @@
 #include <queue>
 #include "CutGraph.h"
 
+const double pi = 3.14159265358979323846;
+
 void MeshLib::CCutGraph::cut_graph()
 {
     _dual_spanning_tree();
@@ -152,9 +154,8 @@ void MeshLib::CCutGraph::compCurvature() {
 
             for (CCutGraphMesh::VertexOutHalfedgeIterator vheiter(m_pMesh, v0); !vheiter.end(); ++vheiter) {
                 CCutGraphHalfEdge* he = *vheiter;
-
                 CCutGraphVertex* v1 = m_pMesh->idVertex(he->target()->id());
-                CCutGraphVertex* v2 = m_pMesh->idVertex(he->he_prev()->source()->id());
+                CCutGraphVertex* v2 = m_pMesh->idVertex(he->he_next()->target()->id());
 
                 float proj01 = sqrt(pow((v0->point() - v1->point()).norm(), 2) - pow(v0->height() - v1->height(), 2));
                 float proj02 = sqrt(pow((v0->point() - v2->point()).norm(), 2) - pow(v0->height() - v2->height(), 2));
@@ -162,19 +163,7 @@ void MeshLib::CCutGraph::compCurvature() {
                 result += std::acos((proj01 * proj01 + proj02 * proj02 - proj12 * proj12) / (2 * proj01 * proj02));
             }
 
-            v0->curvature() = std::atan(1) * 8 - result;
-            /*
-            if (v0->curvature() < -0.000001) {
-                std::cout << "\nNegative curvature: " << std::atan(1) * 8 - result << ")\n";
-                std::cout << "ID " << v0->id() << ": (" << v0->point()(0) << ", " << v0->point()(1) << ", " << v0->point()(2) << "), " << v0->height() << "\n \n";
-                for (CCutGraphMesh::VertexVertexIterator vviter(v0); !vviter.end(); ++vviter) {
-                    CCutGraphVertex* v = *vviter;
-                    std::cout << "ID " << v->id() << ": (" << v->point()(0) << ", " << v->point()(1) << ", " << v->point()(2) << "), " << v->height() << "\n";
-                }
-                exit(2);
-                std::string temp;
-                std::cin >> temp;
-            } */
+            v0->curvature() = 2 * pi - result;
         }
         else {
             v0->curvature() = 0;
