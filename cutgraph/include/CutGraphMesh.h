@@ -13,169 +13,169 @@
 
 namespace MeshLib
 {
-class CCutGraphVertex;
-class CCutGraphEdge;
-class CCutGraphFace;
-class CCutGraphHalfEdge;
+    class CCutGraphVertex;
+    class CCutGraphEdge;
+    class CCutGraphFace;
+    class CCutGraphHalfEdge;
 
-class CCurveVertex;
+    class CCurveVertex;
 
-/*! \brief CCutGraphVertex class
- *
- *   Vertex class for cut graph algoritm
- *   Trait : Vertex valence
- */
-class CCutGraphVertex : public CVertex
-{
-  public:
-    /*! Constructor */
-    CCutGraphVertex() : m_valence(0) {};
+    /*! \brief CCutGraphVertex class
+     *
+     *   Vertex class for cut graph algoritm
+     *   Trait : Vertex valence
+     */
+    class CCutGraphVertex : public CVertex
+    {
+    public:
+        /*! Constructor */
+        CCutGraphVertex() : m_valence(0) {};
 
-    /*! Vertex valence */
-    int& valence() { return m_valence; };
+        /*! Vertex valence */
+        int& valence() { return m_valence; };
 
-    float& curvature() { return m_curvature; };
+        float& curvature() { return m_curvature; };
 
-    float& height() { return m_height; };
+        float& height() { return m_height; };
 
-    bool& embedded() { return m_embedded; };
+        bool& embedded() { return m_embedded; };
 
-    CPoint& embPoint() { return m_emb_point; };
-    
-  protected:
-    /*! Vertex valence */
-    int m_valence;
+        CPoint& embPoint() { return m_emb_point; };
 
-    /*! Vertex curvature */
-    float m_curvature;
+    protected:
+        /*! Vertex valence */
+        int m_valence;
 
-    /*! Vertex height */
-    float m_height;
+        /*! Vertex curvature */
+        float m_curvature;
 
-    /*! Has vertex been embedded yet */
-    bool m_embedded;
+        /*! Vertex height */
+        float m_height;
 
-    /*! embedded coords */
-    CPoint m_emb_point;
-};
+        /*! Has vertex been embedded yet */
+        bool m_embedded;
 
-/*! \brief CCutGraphEdge class
- *
- *   Edge class for cut graph algorithm
- *   Trait : Edge sharp
- */
-class CCutGraphEdge : public CEdge
-{
-  public:
-    /*! Constructor */
-    CCutGraphEdge() : m_sharp(false){};
+        /*! embedded coords */
+        CPoint m_emb_point;
+    };
 
-    /*! Sharp edge */
-    bool& sharp() { return m_sharp; };
+    /*! \brief CCutGraphEdge class
+     *
+     *   Edge class for cut graph algorithm
+     *   Trait : Edge sharp
+     */
+    class CCutGraphEdge : public CEdge
+    {
+    public:
+        /*! Constructor */
+        CCutGraphEdge() : m_sharp(false) {};
 
-    float& power() { return m_power; };
-    
-  protected:
-    /*! Sharp edge */
-    bool m_sharp;
+        /*! Sharp edge */
+        bool& sharp() { return m_sharp; };
 
-    /*! Power of the edge */
-    float m_power;
-};
+        float& power() { return m_power; };
 
-/*! \brief CCutGraphFace class
- *
- *   Face class for cut graph algorithm
- *   Trait : Face touched flag
- */
-class CCutGraphFace : public CFace
-{
-  public:
-    /*! Constructor */
-    CCutGraphFace() : m_touched(false){};
+    protected:
+        /*! Sharp edge */
+        bool m_sharp;
 
-    /*! face touched flag */
-    bool & touched() { return m_touched; };
+        /*! Power of the edge */
+        float m_power;
+    };
 
-    /*! face normal */
-    CPoint& normal() { return m_normal; };
-  protected:
-    /*! face touched flag */
-    bool m_touched;
+    /*! \brief CCutGraphFace class
+     *
+     *   Face class for cut graph algorithm
+     *   Trait : Face touched flag
+     */
+    class CCutGraphFace : public CFace
+    {
+    public:
+        /*! Constructor */
+        CCutGraphFace() : m_touched(false) {};
 
-    /*! face normal */
-    CPoint m_normal;
-};
+        /*! face touched flag */
+        bool& touched() { return m_touched; };
 
-/*! \brief CCutGraphHalfEdge class
- *
- *   HalfEdge class for cut graph algorithm
- */
-class CCutGraphHalfEdge : public CHalfEdge
-{ 
-  public:
-    /*! dihedral angle */
-    float& diAngle() { return m_diAngle; };
+        /*! face normal */
+        CPoint& normal() { return m_normal; };
+    protected:
+        /*! face touched flag */
+        bool m_touched;
 
-    float& vertAngle() { return m_vertAngle; };
+        /*! face normal */
+        CPoint m_normal;
+    };
 
-    float& length() { return m_length; };
+    /*! \brief CCutGraphHalfEdge class
+     *
+     *   HalfEdge class for cut graph algorithm
+     */
+    class CCutGraphHalfEdge : public CHalfEdge
+    {
+    public:
+        /*! dihedral angle */
+        float& diAngle() { return m_diAngle; };
 
-    float& power() { return m_power; };
-  protected:
-    /*! dihedral angle */
-    float m_diAngle;
+        float& vertAngle() { return m_vertAngle; };
 
-    /*! vertical angle between edge and (0, 0, -1) */
-    float m_vertAngle;
+        float& length() { return m_length; };
 
-    /*! length of edge */
-    float m_length;
+        float& power() { return m_power; };
+    protected:
+        /*! dihedral angle */
+        float m_diAngle;
 
-    /*! power of halfedge */
-    float m_power;
-};
+        /*! vertical angle between edge and (0, 0, -1) */
+        float m_vertAngle;
 
-/*! \brief CCutGraphMesh class
- *
- *	Mesh class for cut graph algorithm
- *
- */
-template <typename V, typename E, typename F, typename H>
-class TCutGraphMesh : public CBaseMesh<V, E, F, H>
-{
-  public:
-    typedef V CVertex;
-    typedef E CEdge;
-    typedef F CFace;
-    typedef H CHalfEdge;
+        /*! length of edge */
+        float m_length;
 
-    typedef CBoundary<V, E, F, H>                   CBoundary;
-    typedef CLoop<V, E, F, H>                       CLoop;
+        /*! power of halfedge */
+        float m_power;
+    };
 
-    typedef MeshVertexIterator<V, E, F, H>          MeshVertexIterator;
-    typedef MeshEdgeIterator<V, E, F, H>            MeshEdgeIterator;
-    typedef MeshFaceIterator<V, E, F, H>            MeshFaceIterator;
-    typedef MeshHalfEdgeIterator<V, E, F, H>        MeshHalfEdgeIterator;
+    /*! \brief CCutGraphMesh class
+     *
+     *	Mesh class for cut graph algorithm
+     *
+     */
+    template <typename V, typename E, typename F, typename H>
+    class TCutGraphMesh : public CBaseMesh<V, E, F, H>
+    {
+    public:
+        typedef V CVertex;
+        typedef E CEdge;
+        typedef F CFace;
+        typedef H CHalfEdge;
 
-    typedef VertexVertexIterator<V, E, F, H>        VertexVertexIterator;
-    typedef VertexEdgeIterator<V, E, F, H>          VertexEdgeIterator;
-    typedef VertexFaceIterator<V, E, F, H>          VertexFaceIterator;
-    typedef VertexInHalfedgeIterator<V, E, F, H>    VertexInHalfedgeIterator;
-    typedef VertexOutHalfedgeIterator<V, E, F, H>   VertexOutHalfedgeIterator;
+        typedef CBoundary<V, E, F, H>                   CBoundary;
+        typedef CLoop<V, E, F, H>                       CLoop;
 
-    typedef FaceVertexIterator<V, E, F, H>          FaceVertexIterator;
-    typedef FaceEdgeIterator<V, E, F, H>            FaceEdgeIterator;
-    typedef FaceHalfedgeIterator<V, E, F, H>        FaceHalfedgeIterator;
+        typedef MeshVertexIterator<V, E, F, H>          MeshVertexIterator;
+        typedef MeshEdgeIterator<V, E, F, H>            MeshEdgeIterator;
+        typedef MeshFaceIterator<V, E, F, H>            MeshFaceIterator;
+        typedef MeshHalfEdgeIterator<V, E, F, H>        MeshHalfEdgeIterator;
 
-    /*! normal vector of the base */
-    CPoint & normalVec() { return m_normal; };
+        typedef VertexVertexIterator<V, E, F, H>        VertexVertexIterator;
+        typedef VertexEdgeIterator<V, E, F, H>          VertexEdgeIterator;
+        typedef VertexFaceIterator<V, E, F, H>          VertexFaceIterator;
+        typedef VertexInHalfedgeIterator<V, E, F, H>    VertexInHalfedgeIterator;
+        typedef VertexOutHalfedgeIterator<V, E, F, H>   VertexOutHalfedgeIterator;
 
-protected:
-    CPoint m_normal;
-};
+        typedef FaceVertexIterator<V, E, F, H>          FaceVertexIterator;
+        typedef FaceEdgeIterator<V, E, F, H>            FaceEdgeIterator;
+        typedef FaceHalfedgeIterator<V, E, F, H>        FaceHalfedgeIterator;
 
-typedef TCutGraphMesh<CCutGraphVertex, CCutGraphEdge, CCutGraphFace, CCutGraphHalfEdge> CCutGraphMesh;
+        /*! normal vector of the base */
+        CPoint& normalVec() { return m_normal; };
+
+    protected:
+        CPoint m_normal;
+    };
+
+    typedef TCutGraphMesh<CCutGraphVertex, CCutGraphEdge, CCutGraphFace, CCutGraphHalfEdge> CCutGraphMesh;
 
 } // namespace MeshLib
 
