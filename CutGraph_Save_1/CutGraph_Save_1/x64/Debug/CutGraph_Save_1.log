@@ -1,5 +1,0 @@
-﻿  CutGraph.cpp
-C:\projects\2022_CCG_Assignment_1_skeleton\CutGraph_Save_1\CutGraph_Save_1\CutGraphMesh.h(4,10): error C1083: Cannot open include file: 'Mesh/BaseMesh.h': No such file or directory
-  Viewer.cpp
-C:\projects\2022_CCG_Assignment_1_skeleton\CutGraph_Save_1\CutGraph_Save_1\Viewer.cpp(8,10): error C1083: Cannot open include file: 'GL/glut.h': No such file or directory
-  Generating Code...
