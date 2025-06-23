@@ -16,8 +16,8 @@ if(APPLE)
 endif()
 
 # Include Eigen Library
-set(EIGEN3_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/eigen-3.4.0")
-set(MESHLIB_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/MeshLib/core")
+set(EIGEN3_INCLUDE_DIR "$C:/projects/2022_CCG_Assignment_1_skeleton/3rdparty/eigen-3.4.0/eigen-3.4.0")
+set(MESHLIB_INCLUDE_DIR "$C:/projects/2022_CCG_Assignment_1_skeleton/3rdparty/MeshLib/core")
 include_directories(${EIGEN3_INCLUDE_DIR} ${MESHLIB_INCLUDE_DIR})
 
 # Find OpenGL and GLUT
@@ -27,6 +27,8 @@ if(APPLE)
   include_directories(/opt/homebrew/include /usr/local/include)
   link_directories(/opt/homebrew/lib /usr/local/lib)
 else()
+  set(OPENGL_LIBRARY_DIR "C:/projects/2022_CCG_Assignment_1_skeleton/3rdparty/freeglut/lib")
+  set(GLUT_INCLUDE_DIR "C:/projects/2022_CCG_Assignment_1_skeleton/3rdparty/freeglut/include")
   find_package(OpenGL REQUIRED)
   find_package(GLUT REQUIRED)
 endif()
@@ -45,6 +47,8 @@ if(APPLE)
 else()
   target_link_libraries(CCGHomework ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
 endif()
+
+target_link_libraries (CCGHomework ${EIGEN3_LIBRARY})
 
 # Add the cutgraph module
 add_subdirectory("cutgraph")

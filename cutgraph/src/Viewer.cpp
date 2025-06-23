@@ -1,6 +1,8 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <Eigen/Core>
+#include <Eigen/Dense>
 
 #ifdef MAC_OS
 #include <GLUT/glut.h>
