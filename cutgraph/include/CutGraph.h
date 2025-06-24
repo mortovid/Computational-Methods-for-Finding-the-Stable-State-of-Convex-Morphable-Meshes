@@ -30,16 +30,16 @@ namespace MeshLib
         void cut_graph();
 
         /*! Computes the curvatures and valences for each vertex [UNTESTED] */
-        void compCurvature();
+        void computeCurvature();
 
         /*! Computes the dihedral angle for each edge */
-        void compDihedralVertAngles();
+        void computeDihedralVertAngles();
 
         /*! Computes the power of each halfedge */
-        void compEdgePower();
+        void computeEdgePower();
 
         /*! Computes the Total Scalar Curvature */
-        float compTSC();
+        float computeTSC();
 
         /*! Performs the initial the length, boundary, valence, and height calculations */
         void initGraph();

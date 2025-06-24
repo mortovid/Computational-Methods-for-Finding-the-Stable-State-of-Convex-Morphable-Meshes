@@ -408,11 +408,11 @@ void cut_graph(CCutGraphMesh* pMesh)
     std::cout << "Done with cutgraph. \n";
     cg.initGraph();
     std::cout << "Done with initializations. \n";
-    cg.compCurvature();
+    cg.computeCurvature();
     std::cout << "Done with curvature. \n";
-    cg.compDihedralVertAngles();
+    cg.computeDihedralVertAngles();
     std::cout << "Done with dihedral angles. \n";
-    cg.compEdgePower();
+    cg.computeEdgePower();
     std::cout << "Done with edge powers. \n";
 }
 
@@ -451,91 +451,69 @@ Eigen::MatrixXf computeHessian(CCutGraphMesh* p_mesh) { // REDO
 
 float gradientDescent() { // output is TSC
     CCutGraph vc(&g_mesh);
-    Eigen::VectorXf grad = computeGrad(&g_mesh); // initial gradient
     int numIters = 1;
-    float max = 0;
-    for (float i : grad) {
-        max = std::max(max, std::abs(i));
-    }
-    float TSC = vc.compTSC();
-    std::cout << "Iteration 1: the max is " << max << " and the TSC is " << TSC << ". \n";
 
-    while (max > 0.0001) {
-        max = 0;
+    while (true) {
+        Eigen::VectorXf grad = computeGrad(&g_mesh); // current gradient
+        float TSC = vc.computeTSC();
+
+        float max = 0;
         for (float i : grad) {
             max = std::max(max, std::abs(i));
         }
         if (max < 0.001) {
-            std::cout << "max of " << max << " is too small \n";
-            break;
+            std::cout << "max of " << max << " is small enough; exit \n";
+            return TSC;
         }
         float stepSize = 0.001 / max;
+        std::cout << "Iteration " << numIters << ": the max is " << max << " and the TSC is " << TSC << ". \n";
 
         for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
             CCutGraphVertex* v = *viter;
             v->height() += stepSize * grad(v->id() - 1);
         }
-
+        
         //  std::cout << grad << "\n";
-        vc.compCurvature();
-        vc.compDihedralVertAngles();
-        grad = computeGrad(&g_mesh);
-        TSC = vc.compTSC();
+        vc.computeCurvature();
+        vc.computeDihedralVertAngles();
         numIters++;
-
-        std::cout << "Iteration " << numIters << ": the max is " << max << " and the TSC is " << TSC << ". \n";
-        if (numIters == 287) { break; };
+        // if (numIters == 287) { break; };
     }
-    std::cout << grad << "\n";
-    return TSC;
 }
 
 float newtonMethod() { // output is TSC
     CCutGraph vc(&g_mesh);
-    Eigen::VectorXf grad = computeGrad(&g_mesh); // initial gradient
-    // std::cout << grad << "\n \n";
-    Eigen::MatrixXf hess = computeHessian(&g_mesh); // initial Hessian matrix
-    // std::cout << hess << "\n \n";
-    Eigen::VectorXf addToHeights = hess.llt().solve(grad);
-    // std::cout << addToHeights << "\n \n";
-
-    float TSC = vc.compTSC();
-    std::cout << "Iteration 1: the TSC is " << TSC << ", the max gradient coeff is " << grad.maxCoeff() << ", and the maximum height is 0. \n";
-
     int numIters = 1;
 
-    while (grad.maxCoeff() > 0.0001) { // REDO
+    while (true) {
+        Eigen::VectorXf grad = computeGrad(&g_mesh); // current gradient
+        Eigen::MatrixXf hess = computeHessian(&g_mesh); // current Hessian matrix
+        Eigen::VectorXf addToHeights = hess.llt().solve(grad);
+        float TSC = vc.computeTSC();
+
         float max = 0;
         for (float i : addToHeights) {
             max = std::max(max, std::abs(i));
         }
         if (max < 0.001) {
-            std::cout << "max of " << max << " is too small \n";
-            break;
+            std::cout << "max of " << max << " is small enough; exit \n";
+            return TSC;
         }
         float stepSize = 0.001 / max;
 
-        float maxHeight = 0;
+        std::cout << "Iteration " << numIters << ": the max is " << max << ", and the TSC is " << TSC << ". \n";
+
         for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
             CCutGraphVertex* v = *viter;
             v->height() += stepSize * addToHeights(v->id() - 1);
-            maxHeight = std::max(maxHeight, v->height());
         }
 
-        vc.compCurvature();
-        vc.compDihedralVertAngles();
-        vc.compEdgePower();
-        TSC = vc.compTSC();
-        grad = computeGrad(&g_mesh);
-        hess = computeHessian(&g_mesh);
-        addToHeights = hess.llt().solve(grad);
+        vc.computeCurvature();
+        vc.computeDihedralVertAngles();
+        vc.computeEdgePower();
         numIters++;
-
-        std::cout << "Iteration " << numIters << ": the TSC is " << TSC << ", the max coeff is " << grad.maxCoeff() << ", the max diff is " << addToHeights.maxCoeff() << ", the min diff is " << addToHeights.minCoeff() << ", and the maximum height is " << maxHeight << ". \n";
         // if (numIters == 1050) { break; };
     }
-
-    return TSC;
 }
 
 /*! main function for viewer */

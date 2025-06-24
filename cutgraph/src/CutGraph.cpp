@@ -144,7 +144,7 @@ void MeshLib::embed(CCutGraphVertex v0, CCutGraphVertex v1, CCutGraphVertex v2, 
 }
 
 
-void MeshLib::CCutGraph::compCurvature() {
+void MeshLib::CCutGraph::computeCurvature() {
 
     for (CCutGraphMesh::MeshVertexIterator viter(m_pMesh); !viter.end(); ++viter) {
         CCutGraphVertex* v0 = *viter;
@@ -171,7 +171,7 @@ void MeshLib::CCutGraph::compCurvature() {
     }
 }
 
-void MeshLib::CCutGraph::compDihedralVertAngles() { // REDO
+void MeshLib::CCutGraph::computeDihedralVertAngles() { // REDO
     for (CCutGraphMesh::MeshHalfEdgeIterator heiter(m_pMesh); !heiter.end(); ++heiter) {
         CCutGraphHalfEdge* he = *heiter;
 
@@ -190,7 +190,6 @@ void MeshLib::CCutGraph::compDihedralVertAngles() { // REDO
 
         he->vertAngle() = std::acos((vecb0 * proj1) / proj1.norm());
 
-
         CPoint alt2 = proj2 - proj1 * (proj1 * proj2) / (proj1.norm() * proj2.norm());
         CPoint altB = vecb0 - proj1 * std::cos(he->vertAngle());
         he->diAngle() = std::acos((alt2 * altB) / (alt2.norm() * altB.norm()));
@@ -202,7 +201,7 @@ void MeshLib::CCutGraph::compDihedralVertAngles() { // REDO
     }
 }
 
-void MeshLib::CCutGraph::compEdgePower() { // REDO
+void MeshLib::CCutGraph::computeEdgePower() { // REDO
     for (CCutGraphMesh::MeshHalfEdgeIterator heiter(m_pMesh); !heiter.end(); ++heiter) {
         CCutGraphHalfEdge* he = *heiter;
         if (!he->source()->boundary() || !he->target()->boundary()) {
@@ -214,7 +213,7 @@ void MeshLib::CCutGraph::compEdgePower() { // REDO
     }
 }
 
-float MeshLib::CCutGraph::compTSC() { // REDO
+float MeshLib::CCutGraph::computeTSC() { // REDO
     float result = 0;
     for (CCutGraphMesh::MeshVertexIterator viter(m_pMesh); !viter.end(); ++viter) {
         CCutGraphVertex* v = *viter;
