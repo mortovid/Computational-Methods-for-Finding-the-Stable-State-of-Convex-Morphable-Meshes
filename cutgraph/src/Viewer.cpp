@@ -8,7 +8,7 @@
 #include <GL/glut.h>
 #endif // MAC_OS
 
-#include "viewer/Arcball.h" /*  Arc Ball  Interface         */
+#include "viewer/Arcball.h" /*  Arc Ball  Interface  */
 #include "CutGraphMesh.h"
 #include "CutGraph.h"
 
@@ -476,7 +476,7 @@ float gradientDescent() { // output is TSC
             v->height() += stepSize * grad(v->id() - 1);
         }
 
-        std::cout << grad << "\n";
+        //  std::cout << grad << "\n";
         vc.compCurvature();
         vc.compDihedralVertAngles();
         grad = computeGrad(&g_mesh);
