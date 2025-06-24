@@ -12,7 +12,7 @@
 #include "CutGraphMesh.h"
 #include "CutGraph.h"
 
-#include "Eigen\Dense"
+#include "Eigen/Dense"
 
 using namespace MeshLib;
 
