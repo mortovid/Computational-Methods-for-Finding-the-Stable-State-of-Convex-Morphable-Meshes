@@ -12,7 +12,7 @@
 #include "CutGraphMesh.h"
 #include "CutGraph.h"
 
-#include "C:\projects\2022_CCG_Assignment_1_skeleton\3rdparty\eigen-3.4.0\eigen-3.4.0\Eigen\Dense"
+#include "Eigen\Dense"
 
 using namespace MeshLib;
 
@@ -21,6 +21,7 @@ int g_win_width, g_win_height;
 int g_button;
 int g_startx, g_starty;
 int g_shade_flag = 0;
+
 
 /* rotation quaternion and translation vector for the object */
 CQrot g_obj_rot(0, 0, 1, 0);
