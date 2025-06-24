@@ -1,8 +1,6 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <Eigen/Core>
-#include <Eigen/Dense>
 
 #ifdef MAC_OS
 #include <GLUT/glut.h>
@@ -13,6 +11,8 @@
 #include "viewer/Arcball.h" /*  Arc Ball  Interface         */
 #include "CutGraphMesh.h"
 #include "CutGraph.h"
+
+#include "C:\projects\2022_CCG_Assignment_1_skeleton\3rdparty\eigen-3.4.0\eigen-3.4.0\Eigen\Dense"
 
 using namespace MeshLib;
 
