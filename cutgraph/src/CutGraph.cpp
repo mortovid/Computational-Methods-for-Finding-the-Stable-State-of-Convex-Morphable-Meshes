@@ -131,6 +131,7 @@ void MeshLib::embed(CCutGraphVertex v0, CCutGraphVertex v1, CCutGraphVertex v2, 
         std::string temp;
         std::cin >> temp;
     }
+
     else if (angle102 != angle102) {
         std::cout << "angle error -- please exit \n";
         std::cout << proj01 << ", " << proj02 << ", " << proj12 << " are the sides \n";

@@ -470,14 +470,14 @@ float gradientDescent() { // output is TSC
 
         for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
             CCutGraphVertex* v = *viter;
-            v->height() += stepSize * grad(v->id() - 1);
+            v->height() += 0.01 * grad(v->id() - 1);
         }
         
         //  std::cout << grad << "\n";
         vc.computeCurvature();
         vc.computeDihedralVertAngles();
         numIters++;
-        // if (numIters == 287) { break; };
+        // if (numIters == 287) { return TSC; };
     }
 }
 
@@ -512,7 +512,7 @@ float newtonMethod() { // output is TSC
         vc.computeDihedralVertAngles();
         vc.computeEdgePower();
         numIters++;
-        // if (numIters == 1050) { break; };
+        // if (numIters == 1050) { return TSC; };
     }
 }
 
