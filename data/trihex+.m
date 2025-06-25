@@ -5,7 +5,7 @@ Vertex 4  2.7 0.3 0.2
 Vertex 5  1.5 2.598 0.1
 Vertex 6  -1.5 2.598 0.5
 Vertex 7  -3 0 -0.2
-Vertex 8  -1.5 -2.598 -0.1
+Vertex 8  -1.4 -2.4 -0.1
 Vertex 9  1.3 -2.2 0.5
 Vertex 10  0 0 1.05
 Face 1  1 2 10

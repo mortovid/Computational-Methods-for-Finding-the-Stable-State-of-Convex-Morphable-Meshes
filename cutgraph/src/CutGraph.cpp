@@ -187,7 +187,7 @@ void MeshLib::CCutGraph::computeDihedralVertAngles() { // REDO
 
         // common edge is 01
 
-        CPoint vecb0(0, 0, -1);
+        CPoint vecb0(0, 0, 1);
 
         he->vertAngle() = std::acos((vecb0 * proj1) / proj1.norm());
 

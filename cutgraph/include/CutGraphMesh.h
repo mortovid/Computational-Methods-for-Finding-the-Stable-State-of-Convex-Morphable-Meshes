@@ -34,12 +34,16 @@ namespace MeshLib
         /*! Vertex valence */
         int& valence() { return m_valence; };
 
+        /*! Vertex curvature */
         float& curvature() { return m_curvature; };
 
+        /*! Vertex height */
         float& height() { return m_height; };
 
+        /*! Has vertex been embedded yet */
         bool& embedded() { return m_embedded; };
 
+        /*! embedded coords */
         CPoint& embPoint() { return m_emb_point; };
 
     protected:
@@ -73,13 +77,14 @@ namespace MeshLib
         /*! Sharp edge */
         bool& sharp() { return m_sharp; };
 
+        /*! edge power */
         float& power() { return m_power; };
 
     protected:
         /*! Sharp edge */
         bool m_sharp;
 
-        /*! Power of the edge */
+        /*! edge power */
         float m_power;
     };
 
@@ -117,10 +122,13 @@ namespace MeshLib
         /*! dihedral angle */
         float& diAngle() { return m_diAngle; };
 
+        /*! vertical angle between edge and (0, 0, -1) */
         float& vertAngle() { return m_vertAngle; };
 
+        /*! length of edge */
         float& length() { return m_length; };
 
+        /*! power of halfedge */
         float& power() { return m_power; };
     protected:
         /*! dihedral angle */

@@ -489,6 +489,7 @@ float newtonMethod() { // output is TSC
         Eigen::VectorXf grad = computeGrad(&g_mesh); // current gradient
         Eigen::MatrixXf hess = computeHessian(&g_mesh); // current Hessian matrix
         Eigen::VectorXf addToHeights = hess.llt().solve(grad);
+        // std::cout << addToHeights << "\n";
         float TSC = vc.computeTSC();
 
         float max = 0;
@@ -505,7 +506,7 @@ float newtonMethod() { // output is TSC
 
         for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
             CCutGraphVertex* v = *viter;
-            v->height() += stepSize * addToHeights(v->id() - 1);
+            v->height() -= stepSize * addToHeights(v->id() - 1);
         }
 
         vc.computeCurvature();
@@ -702,7 +703,7 @@ int main(int argc, char* argv[])
 
     for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
         CCutGraphVertex* v = *viter;
-        v->embPoint()[2] = v->height();
+        v->embPoint()[2] = abs(v->height());
     }
 
     for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
