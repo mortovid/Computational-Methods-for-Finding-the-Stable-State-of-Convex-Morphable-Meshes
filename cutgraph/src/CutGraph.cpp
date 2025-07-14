@@ -117,27 +117,10 @@ void MeshLib::CCutGraph::_prune()
 }
 
 void MeshLib::embed(CCutGraphVertex v0, CCutGraphVertex v1, CCutGraphVertex v2, CPoint* proj0, CPoint* proj1, CPoint* proj2) {
-    float proj01 = sqrt(pow((v0.point() - v1.point()).norm(), 2) - pow(v0.height() - v1.height(), 2));
-    float proj02 = sqrt(pow((v0.point() - v2.point()).norm(), 2) - pow(v0.height() - v2.height(), 2));
-    float proj12 = sqrt(pow((v1.point() - v2.point()).norm(), 2) - pow(v1.height() - v2.height(), 2));
-    float angle102 = acos((proj01 * proj01 + proj02 * proj02 - proj12 * proj12) / (2 * proj01 * proj02));
-
-    if (proj12 != proj12) { // debugging stuff
-        std::cout << "proj error -- please exit \n";
-        std::cout << proj01 << ", " << proj02 << ", " << proj12 << " are the sides \n";
-        std::cout << pow((v1.point() - v2.point()).norm(), 1) << " for norm, " << pow(v1.height() - v2.height(), 1) << " for height, "
-            << pow((v1.point() - v2.point()).norm(), 1) - pow(v1.height() - v2.height(), 1) << " for full \n";
-        std::cout << (v0.point() - v1.point()).norm() << ", " << v0.height() - v1.height() << ". \n";
-        std::string temp;
-        std::cin >> temp;
-    }
-
-    else if (angle102 != angle102) {
-        std::cout << "angle error -- please exit \n";
-        std::cout << proj01 << ", " << proj02 << ", " << proj12 << " are the sides \n";
-        std::string temp;
-        std::cin >> temp;
-    }
+    double proj01 = sqrt(pow((v0.point() - v1.point()).norm(), 2) - pow(v0.height() - v1.height(), 2));
+    double proj02 = sqrt(pow((v0.point() - v2.point()).norm(), 2) - pow(v0.height() - v2.height(), 2));
+    double proj12 = sqrt(pow((v1.point() - v2.point()).norm(), 2) - pow(v1.height() - v2.height(), 2));
+    double angle102 = acos((proj01 * proj01 + proj02 * proj02 - proj12 * proj12) / (2 * proj01 * proj02));
 
     *proj0 = CPoint(0, 0, 0);
     *proj1 = CPoint(proj01, 0, 0);
@@ -151,16 +134,16 @@ void MeshLib::CCutGraph::computeCurvature() {
         CCutGraphVertex* v0 = *viter;
 
         if (!v0->boundary()) {
-            float result = 0;
+            double result = 0;
 
             for (CCutGraphMesh::VertexOutHalfedgeIterator vheiter(m_pMesh, v0); !vheiter.end(); ++vheiter) {
                 CCutGraphHalfEdge* he = *vheiter;
                 CCutGraphVertex* v1 = m_pMesh->idVertex(he->target()->id());
                 CCutGraphVertex* v2 = m_pMesh->idVertex(he->he_next()->target()->id());
 
-                float proj01 = sqrt(pow((v0->point() - v1->point()).norm(), 2) - pow(v0->height() - v1->height(), 2));
-                float proj02 = sqrt(pow((v0->point() - v2->point()).norm(), 2) - pow(v0->height() - v2->height(), 2));
-                float proj12 = sqrt(pow((v1->point() - v2->point()).norm(), 2) - pow(v1->height() - v2->height(), 2));
+                double proj01 = sqrt(pow((v0->point() - v1->point()).norm(), 2) - pow(v0->height() - v1->height(), 2));
+                double proj02 = sqrt(pow((v0->point() - v2->point()).norm(), 2) - pow(v0->height() - v2->height(), 2));
+                double proj12 = sqrt(pow((v1->point() - v2->point()).norm(), 2) - pow(v1->height() - v2->height(), 2));
                 result += std::acos((proj01 * proj01 + proj02 * proj02 - proj12 * proj12) / (2 * proj01 * proj02));
             }
 
@@ -182,8 +165,8 @@ void MeshLib::CCutGraph::computeDihedralVertAngles() { // REDO
         CPoint proj0, proj1, proj2;
         embed(*v0, *v1, *v2, &proj0, &proj1, &proj2);
 
-        proj1[2] += v1->height() - v0->height();
-        proj2[2] += v2->height() - v0->height();
+        proj1[2] += std::abs(v1->height()) - std::abs(v0->height());
+        proj2[2] += std::abs(v2->height()) - std::abs(v0->height());
 
         // common edge is 01
 
@@ -206,7 +189,7 @@ void MeshLib::CCutGraph::computeEdgePower() { // REDO
     for (CCutGraphMesh::MeshHalfEdgeIterator heiter(m_pMesh); !heiter.end(); ++heiter) {
         CCutGraphHalfEdge* he = *heiter;
         if (!he->source()->boundary() || !he->target()->boundary()) {
-            float result = (std::cos(he->diAngle()) / std::sin(he->diAngle())) + (std::cos(m_pMesh->CCutGraphMesh::halfedgeSym(he)->diAngle()) / std::sin(m_pMesh->CCutGraphMesh::halfedgeSym(he)->diAngle()));
+            double result = (std::cos(he->diAngle()) / std::sin(he->diAngle())) + (std::cos(m_pMesh->CCutGraphMesh::halfedgeSym(he)->diAngle()) / std::sin(m_pMesh->CCutGraphMesh::halfedgeSym(he)->diAngle()));
             result /= (he->length() * std::sin(he->vertAngle()) * std::sin(he->vertAngle()));
             he->power() = result;
         }
@@ -214,25 +197,43 @@ void MeshLib::CCutGraph::computeEdgePower() { // REDO
     }
 }
 
-float MeshLib::CCutGraph::computeTSC() { // REDO
-    float result = 0;
+double MeshLib::CCutGraph::computeTSC() { // REDO
+    double result = 0;
     for (CCutGraphMesh::MeshVertexIterator viter(m_pMesh); !viter.end(); ++viter) {
         CCutGraphVertex* v = *viter;
         if (!v->boundary()) {
-            result += v->height() * v->curvature();
+            result += std::abs(v->height()) * v->curvature();
         }
     }
     for (CCutGraphMesh::MeshHalfEdgeIterator heiter(m_pMesh); !heiter.end(); ++heiter) {
         CCutGraphHalfEdge* he = *heiter;
         if (he->source()->boundary() && he->target()->boundary()) {
-            result += he->length() * (std::asin(1) * 2 - he->diAngle());
+            result += he->length() * (pi - he->diAngle());
         }
         else {
-            result += he->length() * (std::asin(1) * 2 - he->diAngle() - m_pMesh->halfedgeSym(he)->diAngle());
+            result += he->length() * (pi - he->diAngle() - m_pMesh->halfedgeSym(he)->diAngle());
         }
     }
 
     return result;
+}
+
+bool MeshLib::CCutGraph::checkConvex() {
+    for (CCutGraphMesh::MeshHalfEdgeIterator heiter(m_pMesh); !heiter.end(); ++heiter) {
+        CCutGraphHalfEdge* he = *heiter;
+        if (he->diAngle() != he->diAngle()) {
+            return false;
+        }
+    }
+    for (CCutGraphMesh::MeshHalfEdgeIterator heiter(m_pMesh); !heiter.end(); ++heiter) {
+        CCutGraphHalfEdge* he = *heiter;
+        if (!m_pMesh->halfedgeSource(he)->boundary() || !m_pMesh->halfedgeTarget(he)->boundary()) {
+            if (he->diAngle() + m_pMesh->halfedgeSym(he)->diAngle() < pi) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 void MeshLib::CCutGraph::initGraph() {

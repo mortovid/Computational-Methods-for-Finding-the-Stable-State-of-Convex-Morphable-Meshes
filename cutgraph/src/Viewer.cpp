@@ -449,39 +449,65 @@ Eigen::MatrixXf computeHessian(CCutGraphMesh* p_mesh) { // REDO
     return hessian;
 }
 
-float gradientDescent() { // output is TSC
+double gradientDescent() { // output is TSC
     CCutGraph vc(&g_mesh);
     int numIters = 1;
 
     while (true) {
         Eigen::VectorXf grad = computeGrad(&g_mesh); // current gradient
-        float TSC = vc.computeTSC();
+        double TSC = vc.computeTSC();
 
-        float max = 0;
-        for (float i : grad) {
+        double max = 0;
+        for (double i : grad) {
             max = std::max(max, std::abs(i));
         }
         if (max < 0.001) {
             std::cout << "max of " << max << " is small enough; exit \n";
             return TSC;
         }
-        float stepSize = 0.001 / max;
         std::cout << "Iteration " << numIters << ": the max is " << max << " and the TSC is " << TSC << ". \n";
 
-        for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
-            CCutGraphVertex* v = *viter;
-            v->height() += 0.01 * grad(v->id() - 1);
+        bool okayToAdvance = false;
+        int countAdjustments = -1;
+        double stepSize = 0.01;
+
+        while (!okayToAdvance) {
+            for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
+                CCutGraphVertex* v = *viter;
+                v->height() += stepSize * grad(v->id() - 1);
+            }
+            vc.computeCurvature();
+            vc.computeDihedralVertAngles();
+            bool checkConvex = vc.checkConvex();
+            countAdjustments++;
+            if (countAdjustments % 10 == 1) { std::cout << countAdjustments << "\n"; };
+            okayToAdvance = true;
+
+            for (CCutGraphMesh::MeshVertexIterator viter1(&g_mesh); !viter1.end(); ++viter1) {
+                CCutGraphVertex* v1 = *viter1;
+                double i = v1->curvature();
+                if (!checkConvex || i != i) {
+                    okayToAdvance = false;
+                    for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
+                        CCutGraphVertex* v = *viter;
+                        v->height() -= stepSize * grad(v->id() - 1);
+                    }
+                    stepSize /= 1.2;
+                    break;
+                }
+            }
         }
-        
+        if (countAdjustments > 0) { std::cout << countAdjustments << " adjustments made for a stepSize of " << stepSize << ". \n"; };
+
         //  std::cout << grad << "\n";
         vc.computeCurvature();
         vc.computeDihedralVertAngles();
         numIters++;
-        // if (numIters == 287) { return TSC; };
+        // if (numIters == 1089) { return TSC; };
     }
 }
 
-float newtonMethod() { // output is TSC
+double newtonMethod() { // output is TSC
     CCutGraph vc(&g_mesh);
     int numIters = 1;
 
@@ -490,30 +516,62 @@ float newtonMethod() { // output is TSC
         Eigen::MatrixXf hess = computeHessian(&g_mesh); // current Hessian matrix
         Eigen::VectorXf addToHeights = hess.llt().solve(grad);
         // std::cout << addToHeights << "\n";
-        float TSC = vc.computeTSC();
+        double TSC = vc.computeTSC();
 
-        float max = 0;
-        for (float i : addToHeights) {
+        double max = 0;
+        for (double i : grad) {
             max = std::max(max, std::abs(i));
         }
         if (max < 0.001) {
             std::cout << "max of " << max << " is small enough; exit \n";
             return TSC;
         }
-        float stepSize = 0.001 / max;
 
         std::cout << "Iteration " << numIters << ": the max is " << max << ", and the TSC is " << TSC << ". \n";
 
-        for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
-            CCutGraphVertex* v = *viter;
-            v->height() -= stepSize * addToHeights(v->id() - 1);
-        }
+        bool okayToAdvance = false;
+        int countAdjustments = -1;
+        double stepSize = 1;
 
-        vc.computeCurvature();
+        while (!okayToAdvance) {
+            for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
+                CCutGraphVertex* v = *viter;
+                v->height() -= stepSize * addToHeights(v->id() - 1);
+            }
+            vc.computeCurvature();
+            vc.computeDihedralVertAngles();
+            bool checkConvex = vc.checkConvex();
+            countAdjustments++;
+            // if (countAdjustments % 10 == 1) { std::cout << countAdjustments << "\n"; };
+            okayToAdvance = true;
+            
+            if (!checkConvex) {
+                okayToAdvance = false;
+            }
+            else {
+                for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
+                    CCutGraphVertex* v = *viter;
+                    if (v->curvature() != v->curvature()) {
+                        okayToAdvance = false;
+                        break;
+                    }
+                }
+            }
+            
+            if (!okayToAdvance) {
+                for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
+                    CCutGraphVertex* v = *viter;
+                    v->height() += stepSize * addToHeights(v->id() - 1);
+                }
+                stepSize /= 10;
+            }
+        }
+        if (countAdjustments > 0) { std::cout << countAdjustments << " adjustments made for a stepSize of " << stepSize << ". \n"; };
+
         vc.computeDihedralVertAngles();
         vc.computeEdgePower();
         numIters++;
-        // if (numIters == 1050) { return TSC; };
+        // if (numIters == 137) { return TSC; };
     }
 }
 
@@ -541,7 +599,7 @@ int main(int argc, char* argv[])
     computeNormal(&g_mesh);
     cut_graph(&g_mesh);
     CCutGraph vc(&g_mesh);
-    float TSC;
+    double TSC;
 
     std::cout << "Input G for Gradient Descent and N for Newton's Method: ";
     char method;
@@ -579,13 +637,13 @@ int main(int argc, char* argv[])
     vOrigin1->embPoint() = { 0, 0, 0 };
     vOrigin1->embedded() = true;
 
-    float projInit12 = sqrt(pow((vOrigin2->point() - vOrigin1->point()).norm(), 2) - pow(vOrigin2->height() - vOrigin1->height(), 2));
+    double projInit12 = sqrt(pow((vOrigin2->point() - vOrigin1->point()).norm(), 2) - pow(vOrigin2->height() - vOrigin1->height(), 2));
     vOrigin2->embPoint() = { projInit12, 0, 0 };
     vOrigin2->embedded() = true;
 
-    float projInit13 = sqrt(pow((vOrigin3->point() - vOrigin1->point()).norm(), 2) - pow(vOrigin3->height() - vOrigin1->height(), 2));
-    float projInit23 = sqrt(pow((vOrigin2->point() - vOrigin3->point()).norm(), 2) - pow(vOrigin2->height() - vOrigin3->height(), 2));
-    float angInit = acos((pow(projInit12, 2) + pow(projInit13, 2) - pow(projInit23, 2)) / (2 * projInit12 * projInit13));
+    double projInit13 = sqrt(pow((vOrigin3->point() - vOrigin1->point()).norm(), 2) - pow(vOrigin3->height() - vOrigin1->height(), 2));
+    double projInit23 = sqrt(pow((vOrigin2->point() - vOrigin3->point()).norm(), 2) - pow(vOrigin2->height() - vOrigin3->height(), 2));
+    double angInit = acos((pow(projInit12, 2) + pow(projInit13, 2) - pow(projInit23, 2)) / (2 * projInit12 * projInit13));
     vOrigin3->embPoint() = { projInit13 * cos(angInit), projInit13 * sin(angInit), 0 };
     vOrigin3->embedded() = true;
 
@@ -637,12 +695,12 @@ int main(int argc, char* argv[])
                         }
                     }
 
-                    float proj12 = sqrt(pow((vNext->point() - v2->point()).norm(), 2) - pow(vNext->height() - v2->height(), 2));
-                    float proj13 = sqrt(pow((vNext->point() - v3->point()).norm(), 2) - pow(vNext->height() - v3->height(), 2));
-                    float proj23 = sqrt(pow((v2->point() - v3->point()).norm(), 2) - pow(v2->height() - v3->height(), 2));
+                    double proj12 = sqrt(pow((vNext->point() - v2->point()).norm(), 2) - pow(vNext->height() - v2->height(), 2));
+                    double proj13 = sqrt(pow((vNext->point() - v3->point()).norm(), 2) - pow(vNext->height() - v3->height(), 2));
+                    double proj23 = sqrt(pow((v2->point() - v3->point()).norm(), 2) - pow(v2->height() - v3->height(), 2));
 
-                    float ang23 = atan2(v3->embPoint()[1] - v2->embPoint()[1], v3->embPoint()[0] - v2->embPoint()[0]);
-                    float ang123 = acos((proj12 * proj12 + proj23 * proj23 - proj13 * proj13) / (2 * proj12 * proj23));
+                    double ang23 = atan2(v3->embPoint()[1] - v2->embPoint()[1], v3->embPoint()[0] - v2->embPoint()[0]);
+                    double ang123 = acos((proj12 * proj12 + proj23 * proj23 - proj13 * proj13) / (2 * proj12 * proj23));
                     CPoint emb1 = v2->embPoint() + CPoint{ proj12 * cos(ang23 + ang123), proj12 * sin(ang23 + ang123), 0 };
                     CPoint emb2 = v2->embPoint() + CPoint{ proj12 * cos(ang23 - ang123), proj12 * sin(ang23 - ang123), 0 };
 
@@ -670,8 +728,8 @@ int main(int argc, char* argv[])
                         }
                     }
 
-                    float slope = (v3->embPoint()[1] - v2->embPoint()[1]) / (v3->embPoint()[0] - v2->embPoint()[0]);
-                    float constant = v2->embPoint()[1] - v2->embPoint()[0] * slope;
+                    double slope = (v3->embPoint()[1] - v2->embPoint()[1]) / (v3->embPoint()[0] - v2->embPoint()[0]);
+                    double constant = v2->embPoint()[1] - v2->embPoint()[0] * slope;
 
                     // figure out which embPoint to use
 

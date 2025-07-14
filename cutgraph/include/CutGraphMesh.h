@@ -35,10 +35,10 @@ namespace MeshLib
         int& valence() { return m_valence; };
 
         /*! Vertex curvature */
-        float& curvature() { return m_curvature; };
+        double& curvature() { return m_curvature; };
 
         /*! Vertex height */
-        float& height() { return m_height; };
+        double& height() { return m_height; };
 
         /*! Has vertex been embedded yet */
         bool& embedded() { return m_embedded; };
@@ -51,10 +51,10 @@ namespace MeshLib
         int m_valence;
 
         /*! Vertex curvature */
-        float m_curvature;
+        double m_curvature;
 
         /*! Vertex height */
-        float m_height;
+        double m_height;
 
         /*! Has vertex been embedded yet */
         bool m_embedded;
@@ -78,14 +78,14 @@ namespace MeshLib
         bool& sharp() { return m_sharp; };
 
         /*! edge power */
-        float& power() { return m_power; };
+        double& power() { return m_power; };
 
     protected:
         /*! Sharp edge */
         bool m_sharp;
 
         /*! edge power */
-        float m_power;
+        double m_power;
     };
 
     /*! \brief CCutGraphFace class
@@ -120,28 +120,28 @@ namespace MeshLib
     {
     public:
         /*! dihedral angle */
-        float& diAngle() { return m_diAngle; };
+        double& diAngle() { return m_diAngle; };
 
         /*! vertical angle between edge and (0, 0, -1) */
-        float& vertAngle() { return m_vertAngle; };
+        double& vertAngle() { return m_vertAngle; };
 
         /*! length of edge */
-        float& length() { return m_length; };
+        double& length() { return m_length; };
 
         /*! power of halfedge */
-        float& power() { return m_power; };
+        double& power() { return m_power; };
     protected:
         /*! dihedral angle */
-        float m_diAngle;
+        double m_diAngle;
 
         /*! vertical angle between edge and (0, 0, -1) */
-        float m_vertAngle;
+        double m_vertAngle;
 
         /*! length of edge */
-        float m_length;
+        double m_length;
 
         /*! power of halfedge */
-        float m_power;
+        double m_power;
     };
 
     /*! \brief CCutGraphMesh class

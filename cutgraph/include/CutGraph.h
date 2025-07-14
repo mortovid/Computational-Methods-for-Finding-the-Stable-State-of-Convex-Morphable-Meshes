@@ -39,7 +39,10 @@ namespace MeshLib
         void computeEdgePower();
 
         /*! Computes the Total Scalar Curvature */
-        float computeTSC();
+        double computeTSC();
+
+        /*! Returns whether or not the cap is convex */
+        bool checkConvex();
 
         /*! Performs the initial the length, boundary, valence, and height calculations */
         void initGraph();
