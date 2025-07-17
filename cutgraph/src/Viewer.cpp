@@ -471,10 +471,11 @@ double gradientDescent() { // output is TSC
         int countAdjustments = -1;
         double stepSize = 0.1;
 
+        
         while (!okayToAdvance) {
             for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
                 CCutGraphVertex* v = *viter;
-                if (!v->boundary()) { v->height() += stepSize * grad(v->id() - 1); };
+                if (!v->boundary()) { v->height() += stepSize * grad(v->id() - 1) / max; };
             }
             vc.computeDihedralVertAngles();
             countAdjustments++;
@@ -485,14 +486,20 @@ double gradientDescent() { // output is TSC
                 okayToAdvance = false;
                 for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
                     CCutGraphVertex* v = *viter;
-                    if (!v->boundary()) { v->height() -= stepSize * grad(v->id() - 1); };
+                    if (!v->boundary()) { v->height() -= stepSize * grad(v->id() - 1) / max; };
                 }
-                stepSize /= 2;
+                stepSize /= 1.2;
             }
-        }
+        } 
         if (countAdjustments > 0) { std::cout << countAdjustments << " adjustments made for a stepSize of " << stepSize << ". \n"; };
-
         //  std::cout << grad << "\n";
+
+        /*
+        for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
+            CCutGraphVertex* v = *viter;
+            if (!v->boundary()) { v->height() += 0.1 * grad(v->id() - 1); };
+        } */
+
         vc.computeCurvature();
         numIters++;
         // if (numIters == 400) { return TSC; };
@@ -587,6 +594,13 @@ int main(int argc, char* argv[])
 
     std::cout << "Input G for Gradient Descent and N for Newton's Method: ";
     char method;
+    std::cout << "\n";
+    for (CCutGraphMesh::MeshHalfEdgeIterator heiter(&g_mesh); !heiter.end(); ++heiter) {
+        CCutGraphHalfEdge* he = *heiter;
+        if (!he->source()->boundary() || !he->target()->boundary()) {
+            std::cout << "vertAngle = " << he->vertAngle() << ", diAngle = " << he->diAngle() << "\n";
+        }
+    }
     std::cin >> method;
 
     SYSTEMTIME time1, time2;

@@ -182,6 +182,13 @@ void MeshLib::CCutGraph::computeDihedralVertAngles() { // REDO
         CPoint cross12 = (proj1) ^ proj2;
         CPoint cross1b = (proj1) ^ vecb0;
         he->diAngle() = std::acos((cross12 * cross1b) / (cross12.norm() * cross1b.norm()));
+        if (!he->source()->boundary() || !he->target()->boundary()) {
+            if (he->diAngle() > 1.58) {
+                std::cout << "(" << proj0[0] << ", " << proj0[1] << ", " << proj0[2] << "), " << "\n"
+                    << "(" << proj1[0] << ", " << proj1[1] << ", " << proj1[2] << "), " << "\n"
+                    << "(" << proj2[0] << ", " << proj2[1] << ", " << proj2[2] << "), " << "\n" << he->diAngle() << "\n";
+            }
+        }
     }
 }
 
@@ -227,8 +234,8 @@ bool MeshLib::CCutGraph::checkConvex() {
     }
     for (CCutGraphMesh::MeshHalfEdgeIterator heiter(m_pMesh); !heiter.end(); ++heiter) {
         CCutGraphHalfEdge* he = *heiter;
-        if (!m_pMesh->halfedgeSource(he)->boundary() || !m_pMesh->halfedgeTarget(he)->boundary()) {
-            if (he->diAngle() + m_pMesh->halfedgeSym(he)->diAngle() > pi) {
+        if (!he->source()->boundary() || !he->target()->boundary()) {
+            if (he->diAngle() + m_pMesh->halfedgeSym(he)->diAngle() > pi + 0.0002) {
                 return false;
             }
         }
@@ -254,6 +261,7 @@ void MeshLib::CCutGraph::initGraph() {
         }
         else {
             v->boundary() = false;
+            v->height() = 0.3;
         }
         /*
         if (!v->boundary()) {
