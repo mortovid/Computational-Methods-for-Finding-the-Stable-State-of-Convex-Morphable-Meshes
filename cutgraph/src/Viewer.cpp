@@ -455,6 +455,7 @@ double gradientDescent() { // output is TSC
 
     while (true) {
         Eigen::VectorXf grad = computeGrad(&g_mesh); // current gradient
+        // std::cout << grad << "\n";
         double TSC = vc.computeTSC();
 
         double max = 0;
@@ -471,38 +472,30 @@ double gradientDescent() { // output is TSC
         int countAdjustments = -1;
         double stepSize = 0.1;
 
-        
         while (!okayToAdvance) {
             for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
                 CCutGraphVertex* v = *viter;
-                if (!v->boundary()) { v->height() += stepSize * grad(v->id() - 1) / max; };
+                if (!v->boundary()) { v->height() -= stepSize * grad(v->id() - 1); };
             }
-            vc.computeDihedralVertAngles();
+            vc.computeCurvature();
             countAdjustments++;
             // if (countAdjustments % 10 == 1) { std::cout << countAdjustments << "\n"; };
             okayToAdvance = true;
 
-            if (!vc.checkConvex()) {
-                okayToAdvance = false;
-                for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
-                    CCutGraphVertex* v = *viter;
-                    if (!v->boundary()) { v->height() -= stepSize * grad(v->id() - 1) / max; };
+            for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
+                CCutGraphVertex* v = *viter;
+                if (v->curvature() != v->curvature() || v->curvature() < -0.01) {
+                    for (CCutGraphMesh::MeshVertexIterator viter1(&g_mesh); !viter1.end(); ++viter1) {
+                        CCutGraphVertex* v1 = *viter1;
+                        if (!v1->boundary()) { v1->height() += stepSize * grad(v1->id() - 1); };
+                    }
+                    okayToAdvance = false;
+                    stepSize /= 2;
+                    break;
                 }
-                stepSize /= 1.2;
             }
-        } 
-        if (countAdjustments > 0) { std::cout << countAdjustments << " adjustments made for a stepSize of " << stepSize << ". \n"; };
-        //  std::cout << grad << "\n";
-
-        /*
-        for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
-            CCutGraphVertex* v = *viter;
-            if (!v->boundary()) { v->height() += 0.1 * grad(v->id() - 1); };
-        } */
-
-        vc.computeCurvature();
+        }
         numIters++;
-        // if (numIters == 400) { return TSC; };
     }
 }
 
@@ -539,30 +532,30 @@ double newtonMethod() { // output is TSC
                 CCutGraphVertex* v = *viter;
                 if (!v->boundary()) { v->height() -= stepSize * addToHeights(v->id() - 1); };
             }
-            vc.computeDihedralVertAngles();
+            vc.computeCurvature();
             countAdjustments++;
             // if (countAdjustments % 10 == 1) { std::cout << countAdjustments << "\n"; };
             okayToAdvance = true;
             
-            if (!vc.checkConvex()) {
-                okayToAdvance = false;
-                if (!okayToAdvance) {
-                    for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
-                        CCutGraphVertex* v = *viter;
-                        if (!v->boundary()) { v->height() += stepSize * addToHeights(v->id() - 1); };
+            for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
+                CCutGraphVertex* v = *viter;
+                if (v->curvature() != v->curvature() || v->curvature() < -0.01) {
+                    for (CCutGraphMesh::MeshVertexIterator viter1(&g_mesh); !viter1.end(); ++viter1) {
+                        CCutGraphVertex* v1 = *viter1;
+                        if (!v1->boundary()) { v1->height() += stepSize * addToHeights(v1->id() - 1); };
                     }
+                    okayToAdvance = false;
                     stepSize /= 2;
+                    break;
                 }
             }
-            
-            
         }
         if (countAdjustments > 0) { std::cout << countAdjustments << " adjustments made for a stepSize of " << stepSize << ". \n"; };
 
-        vc.computeCurvature();
+        vc.computeDihedralVertAngles();
         vc.computeEdgePower();
         numIters++;
-        // if (numIters == 137) { return TSC; };
+        // if (numIters == 100) { return TSC; };
     }
 }
 
@@ -594,13 +587,6 @@ int main(int argc, char* argv[])
 
     std::cout << "Input G for Gradient Descent and N for Newton's Method: ";
     char method;
-    std::cout << "\n";
-    for (CCutGraphMesh::MeshHalfEdgeIterator heiter(&g_mesh); !heiter.end(); ++heiter) {
-        CCutGraphHalfEdge* he = *heiter;
-        if (!he->source()->boundary() || !he->target()->boundary()) {
-            std::cout << "vertAngle = " << he->vertAngle() << ", diAngle = " << he->diAngle() << "\n";
-        }
-    }
     std::cin >> method;
 
     SYSTEMTIME time1, time2;

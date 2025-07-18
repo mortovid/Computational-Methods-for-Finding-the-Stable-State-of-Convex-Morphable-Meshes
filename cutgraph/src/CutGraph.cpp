@@ -174,21 +174,23 @@ void MeshLib::CCutGraph::computeDihedralVertAngles() { // REDO
 
         he->vertAngle() = std::acos((vecb0 * proj1) / proj1.norm());
 
-        /*
+        
         CPoint alt2 = proj2 - proj1 * (proj1 * proj2) / (proj1.norm() * proj1.norm());
         CPoint altB = vecb0 - proj1 * std::cos(he->vertAngle()) / proj1.norm();
-        he->diAngle() = std::acos((alt2 * altB) / (alt2.norm() * altB.norm())); */
-
+        he->diAngle() = std::acos((alt2 * altB) / (alt2.norm() * altB.norm()));
+        /*
         CPoint cross12 = (proj1) ^ proj2;
         CPoint cross1b = (proj1) ^ vecb0;
         he->diAngle() = std::acos((cross12 * cross1b) / (cross12.norm() * cross1b.norm()));
+        */
+        /*
         if (!he->source()->boundary() || !he->target()->boundary()) {
             if (he->diAngle() > 1.58) {
                 std::cout << "(" << proj0[0] << ", " << proj0[1] << ", " << proj0[2] << "), " << "\n"
                     << "(" << proj1[0] << ", " << proj1[1] << ", " << proj1[2] << "), " << "\n"
-                    << "(" << proj2[0] << ", " << proj2[1] << ", " << proj2[2] << "), " << "\n" << he->diAngle() << "\n";
+                    << "(" << proj2[0] << ", " << proj2[1] << ", " << proj2[2] << "), " << "\n" << he->vertAngle() << ", " << he->diAngle() << "\n";
             }
-        }
+        } */
     }
 }
 
@@ -235,7 +237,7 @@ bool MeshLib::CCutGraph::checkConvex() {
     for (CCutGraphMesh::MeshHalfEdgeIterator heiter(m_pMesh); !heiter.end(); ++heiter) {
         CCutGraphHalfEdge* he = *heiter;
         if (!he->source()->boundary() || !he->target()->boundary()) {
-            if (he->diAngle() + m_pMesh->halfedgeSym(he)->diAngle() > pi + 0.0002) {
+            if (he->diAngle() + m_pMesh->halfedgeSym(he)->diAngle() > pi + 0.0003) {
                 return false;
             }
         }
@@ -261,13 +263,8 @@ void MeshLib::CCutGraph::initGraph() {
         }
         else {
             v->boundary() = false;
-            v->height() = 0.3;
+            // v->height() = 0.3;
         }
-        /*
-        if (!v->boundary()) {
-            v->height() = -0.5;
-        }
-        */
     }
     for (CCutGraphMesh::MeshHalfEdgeIterator heiter(m_pMesh); !heiter.end(); ++heiter) {
         CCutGraphHalfEdge* he = *heiter;
