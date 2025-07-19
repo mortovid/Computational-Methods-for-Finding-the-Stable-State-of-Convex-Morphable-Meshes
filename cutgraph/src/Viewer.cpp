@@ -498,9 +498,6 @@ double gradientDescent() { // output is TSC
         vc.computeDihedralVertAngles();
         vc.computeEdgePower();
         numIters++;
-        if (numIters == 45) {
-            return TSC;
-        }
     }
 }
 
