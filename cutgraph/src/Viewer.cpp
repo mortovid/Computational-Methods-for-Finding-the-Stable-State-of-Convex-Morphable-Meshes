@@ -495,7 +495,12 @@ double gradientDescent() { // output is TSC
                 }
             }
         }
+        vc.computeDihedralVertAngles();
+        vc.computeEdgePower();
         numIters++;
+        if (numIters == 45) {
+            return TSC;
+        }
     }
 }
 
@@ -508,7 +513,7 @@ double newtonMethod() { // output is TSC
         // std::cout << "grad \n" << grad << "\n";
         Eigen::MatrixXf hess = computeHessian(&g_mesh); // current Hessian matrix
         // std::cout << "computeHessian \n" << hess << "\n";
-        Eigen::VectorXf addToHeights = hess.llt().solve(grad);
+        Eigen::VectorXf addToHeights = hess.ldlt().solve(grad);
        //  std::cout << "addToHeights \n" << addToHeights << "\n";
         double TSC = vc.computeTSC();
 
@@ -555,7 +560,6 @@ double newtonMethod() { // output is TSC
         vc.computeDihedralVertAngles();
         vc.computeEdgePower();
         numIters++;
-        // if (numIters == 100) { return TSC; };
     }
 }
 
