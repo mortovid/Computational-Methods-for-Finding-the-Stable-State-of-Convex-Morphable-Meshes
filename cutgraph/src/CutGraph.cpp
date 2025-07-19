@@ -263,7 +263,6 @@ void MeshLib::CCutGraph::initGraph() {
         }
         else {
             v->boundary() = false;
-            // v->height() = 0.3;
         }
     }
     for (CCutGraphMesh::MeshHalfEdgeIterator heiter(m_pMesh); !heiter.end(); ++heiter) {
