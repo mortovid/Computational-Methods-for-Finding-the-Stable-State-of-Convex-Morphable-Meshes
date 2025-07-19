@@ -495,6 +495,8 @@ double gradientDescent() { // output is TSC
                 }
             }
         }
+        if (countAdjustments > 0) { std::cout << countAdjustments << " adjustments made for a stepSize of " << stepSize << ". \n"; };
+
         vc.computeDihedralVertAngles();
         vc.computeEdgePower();
         numIters++;
@@ -592,7 +594,7 @@ int main(int argc, char* argv[])
 
     SYSTEMTIME time1, time2;
     GetSystemTime(&time1);
-    if (method == 'G') {
+    if (method == 'G' || method == 'g') {
         TSC = gradientDescent();
     }
     else {
