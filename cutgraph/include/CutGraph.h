@@ -33,7 +33,7 @@ namespace MeshLib
         bool computeCurvature();
 
         /*! Computes the dihedral angle for each edge */
-        void computeDihedralVertAngles();
+        bool computeDihedralVertAngles();
 
         /*! Computes the power of each halfedge */
         void computeEdgePower();

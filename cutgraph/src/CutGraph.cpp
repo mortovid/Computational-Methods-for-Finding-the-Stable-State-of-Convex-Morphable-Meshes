@@ -161,7 +161,7 @@ bool MeshLib::CCutGraph::computeCurvature() {
     return true;
 }
 
-void MeshLib::CCutGraph::computeDihedralVertAngles() { // REDO
+bool MeshLib::CCutGraph::computeDihedralVertAngles() { // REDO
     for (CCutGraphMesh::MeshHalfEdgeIterator heiter(m_pMesh); !heiter.end(); ++heiter) {
         CCutGraphHalfEdge* he = *heiter;
 
@@ -177,26 +177,18 @@ void MeshLib::CCutGraph::computeDihedralVertAngles() { // REDO
         // common edge is 01
 
         CPoint vecb0(0, 0, -1);
-
+        if (abs((vecb0 * proj1) / proj1.norm()) > 1) {
+            return false;
+        }
         he->vertAngle() = std::acos((vecb0 * proj1) / proj1.norm());
 
         
         CPoint alt2 = proj2 - proj1 * (proj1 * proj2) / (proj1.norm() * proj1.norm());
         CPoint altB = vecb0 - proj1 * std::cos(he->vertAngle()) / proj1.norm();
+        if (abs((alt2 * altB) / (alt2.norm() * altB.norm())) > 1) {
+            return false;
+        }
         he->diAngle() = std::acos((alt2 * altB) / (alt2.norm() * altB.norm()));
-        /*
-        CPoint cross12 = (proj1) ^ proj2;
-        CPoint cross1b = (proj1) ^ vecb0;
-        he->diAngle() = std::acos((cross12 * cross1b) / (cross12.norm() * cross1b.norm()));
-        */
-        /*
-        if (!he->source()->boundary() || !he->target()->boundary()) {
-            if (he->diAngle() > 1.58) {
-                std::cout << "(" << proj0[0] << ", " << proj0[1] << ", " << proj0[2] << "), " << "\n"
-                    << "(" << proj1[0] << ", " << proj1[1] << ", " << proj1[2] << "), " << "\n"
-                    << "(" << proj2[0] << ", " << proj2[1] << ", " << proj2[2] << "), " << "\n" << he->vertAngle() << ", " << he->diAngle() << "\n";
-            }
-        } */
     }
 }
 
