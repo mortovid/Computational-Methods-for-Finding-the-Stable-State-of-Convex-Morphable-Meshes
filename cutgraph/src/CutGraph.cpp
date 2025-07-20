@@ -144,7 +144,7 @@ void MeshLib::CCutGraph::computeCurvature() {
                 double proj01 = sqrt(pow((v0->point() - v1->point()).norm(), 2) - pow(v0->height() - v1->height(), 2));
                 double proj02 = sqrt(pow((v0->point() - v2->point()).norm(), 2) - pow(v0->height() - v2->height(), 2));
                 double proj12 = sqrt(pow((v1->point() - v2->point()).norm(), 2) - pow(v1->height() - v2->height(), 2));
-                result += std::acos((proj01 * proj01 + proj02 * proj02 - proj12 * proj12) / (2 * proj01 * proj02));
+                result += acos((proj01 * proj01 + proj02 * proj02 - proj12 * proj12) / (2 * proj01 * proj02));
             }
 
             v0->curvature() = 2 * pi - result;
