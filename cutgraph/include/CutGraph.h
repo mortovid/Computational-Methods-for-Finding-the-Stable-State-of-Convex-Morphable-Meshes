@@ -30,7 +30,7 @@ namespace MeshLib
         void cut_graph();
 
         /*! Computes the curvatures and valences for each vertex [UNTESTED] */
-        void computeCurvature();
+        bool computeCurvature();
 
         /*! Computes the dihedral angle for each edge */
         void computeDihedralVertAngles();

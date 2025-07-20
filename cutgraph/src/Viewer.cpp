@@ -459,18 +459,23 @@ double gradientDescent() { // output is TSC
         double TSC = vc.computeTSC();
 
         double max = 0;
-        int counter = 1;
         int maxID = 0;
         double avg = 0;
         int numNonBound = 0;
-        for (double i : grad) {
-            if (max < abs(i)) {
-                max = abs(i);
-                maxID = counter;
+        for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
+            CCutGraphVertex* v = *viter;
+            if (!v->boundary()) {
+                if (v->curvature() != 0) { 
+                    numNonBound++; 
+
+                    avg += v->curvature();
+                    if (max < abs(v->curvature())) {
+                        max = abs(v->curvature());
+                        maxID = v->id();
+                    }
+                }
+
             }
-            avg += i;
-            if (i != 0) { numNonBound++; };
-            counter++;
         }
         if (max < 0.001) {
             std::cout << "max of " << max << " is small enough; exit \n";
@@ -481,33 +486,40 @@ double gradientDescent() { // output is TSC
 
         bool okayToAdvance = false;
         int countAdjustments = -1;
-        double stepSize = 1;
+        double stepSize = 0.1;
         // double stepSize = 100 * (max - 0.001);
 
         while (!okayToAdvance) {
+            /*
             for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
                 CCutGraphVertex* v = *viter;
                 if (!v->boundary() && v->id() == maxID) { v->height() += stepSize * grad(v->id() - 1); };
-            }
+            } */
+            g_mesh.idVertex(maxID)->height() += stepSize * grad(maxID - 1);
             vc.computeCurvature();
             countAdjustments++;
             // if (countAdjustments % 10 == 1) { std::cout << countAdjustments << "\n"; };
             okayToAdvance = true;
 
-            for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
-                CCutGraphVertex* v = *viter;
-                if (v->curvature() != v->curvature() /* || v->curvature() < 0 */) {
-                    for (CCutGraphMesh::MeshVertexIterator viter1(&g_mesh); !viter1.end(); ++viter1) {
-                        CCutGraphVertex* v1 = *viter1;
-                        if (!v1->boundary() && v1->id() == maxID) { v1->height() -= stepSize * grad(v1->id() - 1); };
+            if (!vc.computeCurvature()) {
+                g_mesh.idVertex(maxID)->height() -= stepSize * grad(maxID - 1);
+                okayToAdvance = false;
+                stepSize /= 2;
+            }
+            else {
+                for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
+                    CCutGraphVertex* v = *viter;
+                    if (v->curvature() < 0) {
+                        g_mesh.idVertex(maxID)->height() -= stepSize * grad(maxID - 1);
+                        okayToAdvance = false;
+                        stepSize /= 2;
+                        break;
                     }
-                    okayToAdvance = false;
-                    stepSize /= 2;
-                    break;
                 }
             }
+    
         }
-        fprintf(stdout, "Iteration %d: the max is %.9f, the ID is %d, the max is %f, the avg is %.9f, the number of adjustments is %d, the stepSize is %.9f, and the TSC is %.9f\n", numIters, max, maxID, g_mesh.idVertex(maxID - 1)->curvature() - stepSize * grad(maxID - 1), avg, countAdjustments, stepSize, TSC);
+        fprintf(stdout, "Iteration %d: the max is %.9f, the ID is %d, the avg is %.9f, the number of adjustments is %d, the stepSize is %.9f, and the TSC is %.9f\n", numIters, max, maxID, avg, countAdjustments, stepSize, TSC);
         // if (countAdjustments > 0) { std::cout << countAdjustments << " adjustments made for a stepSize of " << stepSize << ". \n"; };
         
         vc.computeDihedralVertAngles();
@@ -576,7 +588,7 @@ double newtonMethod() { // output is TSC
             
             for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
                 CCutGraphVertex* v = *viter;
-                if (v->curvature() != v->curvature() || v->curvature() < -0.01) {
+                if (isnan(v->curvature()) || v->curvature() < -0.01) {
                     for (CCutGraphMesh::MeshVertexIterator viter1(&g_mesh); !viter1.end(); ++viter1) {
                         CCutGraphVertex* v1 = *viter1;
                         if (!v1->boundary()) { v1->height() += stepSize * addToHeights(v1->id() - 1); };

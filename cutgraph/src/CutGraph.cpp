@@ -128,8 +128,7 @@ void MeshLib::embed(CCutGraphVertex v0, CCutGraphVertex v1, CCutGraphVertex v2, 
 }
 
 
-void MeshLib::CCutGraph::computeCurvature() {
-
+bool MeshLib::CCutGraph::computeCurvature() {
     for (CCutGraphMesh::MeshVertexIterator viter(m_pMesh); !viter.end(); ++viter) {
         CCutGraphVertex* v0 = *viter;
 
@@ -140,6 +139,12 @@ void MeshLib::CCutGraph::computeCurvature() {
                 CCutGraphHalfEdge* he = *vheiter;
                 CCutGraphVertex* v1 = m_pMesh->idVertex(he->target()->id());
                 CCutGraphVertex* v2 = m_pMesh->idVertex(he->he_next()->target()->id());
+
+                if (abs(v0->height() - v1->height()) > (v0->point() - v1->point()).norm()
+                    || abs(v0->height() - v2->height()) > (v0->point() - v2->point()).norm()
+                    || abs(v1->height() - v2->height()) > (v1->point() - v2->point()).norm()) {
+                    return false;
+                }
 
                 double proj01 = sqrt(pow((v0->point() - v1->point()).norm(), 2) - pow(v0->height() - v1->height(), 2));
                 double proj02 = sqrt(pow((v0->point() - v2->point()).norm(), 2) - pow(v0->height() - v2->height(), 2));
@@ -153,6 +158,7 @@ void MeshLib::CCutGraph::computeCurvature() {
             v0->curvature() = 0;
         }
     }
+    return true;
 }
 
 void MeshLib::CCutGraph::computeDihedralVertAngles() { // REDO
@@ -230,7 +236,7 @@ double MeshLib::CCutGraph::computeTSC() { // REDO
 bool MeshLib::CCutGraph::checkConvex() {
     for (CCutGraphMesh::MeshHalfEdgeIterator heiter(m_pMesh); !heiter.end(); ++heiter) {
         CCutGraphHalfEdge* he = *heiter;
-        if (he->diAngle() != he->diAngle()) {
+        if (isnan(he->diAngle())) {
             return false;
         }
     }
