@@ -449,81 +449,151 @@ Eigen::MatrixXf computeHessian(CCutGraphMesh* p_mesh) { // REDO
     return hessian;
 }
 
-double gradientDescent() { // output is TSC
+double gradientDescent(int stop) { // output is TSC
     CCutGraph vc(&g_mesh);
     int numIters = 1;
+    double prevStepSize = 0;
+    int numVertices = g_mesh.numVertices();
 
     while (true) {
         Eigen::VectorXf grad = computeGrad(&g_mesh); // current gradient
+
         double TSC = vc.computeTSC();
-        //if (numIters == 1001) {
-        //    return TSC;
-        //}
+        if (numIters == stop) {
+            std::cout << grad << "\n";
+            return TSC;
+        }
 
         double max = 0;
+        double prevAvg = 0;
+        int numIntVertices = 0;
+        for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
+            CCutGraphVertex* v = *viter;
+            if (!v->boundary()) {
+                max = std::max(max, abs(v->curvature()));
+                prevAvg += abs(v->curvature());
+                numIntVertices++;
+            }
+        }
+        prevAvg /= numIntVertices;
+
         for (double i : grad) {
             max = std::max(max, std::abs(i));
         }
-        double min = 0;
-        int minID = 1;
-        for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
-            CCutGraphVertex* v = *viter;
-            if (min > abs(v->curvature()) && abs(v->curvature() >= 0.001)) {
-                min = abs(v->curvature());
-                minID = v->id();
-            }
-        }
-        if (max < 0.001) {
+        if (max < 0.0001) {
             std::cout << "max of " << max << " is small enough; exit \n";
             return TSC;
         }
 
-        std::cout << "Iteration " << numIters << ": the max is " << max << ", and the TSC is " << TSC << ". \n";
+        std::cout << "Iteration " << numIters << ": the norm is " << grad.norm() << ", the max is " << max << ", the avg is " << prevAvg << ", the past stepSize is " << prevStepSize << ", and the TSC is " << TSC << ". \n";
 
         bool okayToAdvance = false;
-        int countAdjustments = -1;
-        double stepSize = 0.001;
-
-        while (!okayToAdvance) {
-
+        int countAdjustments = 0;
+        double stepSize = 1;
+        
+        while (!okayToAdvance) { // backtracking line search
             for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
                 CCutGraphVertex* v = *viter;
                 if (!v->boundary()) { v->height() += stepSize * grad(v->id() - 1); };
             }
-
-            countAdjustments++;
-            // if (countAdjustments % 10 == 1) { std::cout << countAdjustments << "\n"; };
+            vc.computeCurvature();
+            vc.computeDihedralVertAngles();
+            vc.computeEdgePower();
             okayToAdvance = true;
 
-            if (!vc.computeCurvature()) {
+            if (vc.computeTSC() - TSC < 0.1 * stepSize * grad.norm() * grad.norm()) {
+                stepSize /= 1.2;
+                countAdjustments++;
                 okayToAdvance = false;
-            } else {
-                for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
-                    CCutGraphVertex* v = *viter;
-                    if (v->curvature() < 0) {
+            }
+            for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
+                CCutGraphVertex* v = *viter;
+                if (!v->boundary()) { v->height() -= stepSize * grad(v->id() - 1); };
+            }
+        }
+        if (countAdjustments > 0) {
+            std::cout << countAdjustments << " adjustments to stepSize for line search \n";
+        } 
+        
+        okayToAdvance = false;
+        double* cancelNegative = new double[numVertices];
+        vc.computeCurvature();
+        while (!okayToAdvance) {
+            okayToAdvance = true;
+            for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
+                CCutGraphVertex* v = *viter;
+                if (v->curvature() >= 0) {
+                    cancelNegative[v->id() - 1] = 1;
+                }
+                else {
+                    v->height() += stepSize * grad(v->id() - 1);
+                    bool unchangedWorks = vc.computeCurvature();
+                    double curvatureUnchanged = 0;
+                    if (!unchangedWorks) {
+                        cancelNegative[v->id() - 1] = -1;
+                    }
+                    else {
+                        curvatureUnchanged = abs(v->curvature());
+                    }
+
+                    v->height() -= 2 * stepSize * grad(v->id() - 1);
+                    bool changedWorks = vc.computeCurvature();
+                    double curvatureChanged = curvatureUnchanged + 1;
+                    if (!changedWorks) {
+                        cancelNegative[v->id() - 1] = 1;
+                    }
+                    else {
+                        curvatureChanged = abs(v->curvature());
+                    }
+                    v->height() += stepSize * grad(v->id() - 1);
+
+                    if (!changedWorks && !unchangedWorks) {
                         okayToAdvance = false;
-                        break;
+                    }
+                    else if (curvatureChanged >= curvatureUnchanged) {
+                        cancelNegative[v->id() - 1] = 1;
+                    }
+                    else {
+                        cancelNegative[v->id() - 1] = -1;
                     }
                 }
             }
 
-            if (!okayToAdvance) {
+            for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
+                CCutGraphVertex* v = *viter;
+                if (!v->boundary()) { v->height() = v->height() + stepSize * grad(v->id() - 1) * cancelNegative[v->id() - 1]; };
+            }
 
+            if (!vc.computeCurvature()) {
+                okayToAdvance = false;
+            }
+            else {
+                double avg = 0;
                 for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
                     CCutGraphVertex* v = *viter;
-                    if (!v->boundary()) { v->height() -= stepSize * grad(v->id() - 1); };
+                    avg += abs(v->curvature());
                 }
-                g_mesh.idVertex(minID)->height() -= stepSize * grad(minID - 1);
-                okayToAdvance = false;
+
+                avg /= numIntVertices;
+                if (avg > prevAvg * 1.1) {
+                    okayToAdvance = false;
+                }
+            }
+
+            if (!okayToAdvance) {
+                for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
+                    CCutGraphVertex* v = *viter;
+                    if (!v->boundary()) { v->height() -= stepSize * grad(v->id() - 1) * cancelNegative[v->id() - 1]; };
+                }
                 stepSize /= 2;
             }
         }
-        if (countAdjustments > 0) { std::cout << countAdjustments << " adjustments made for a stepSize of " << stepSize << ". \n"; };
 
+        delete[] cancelNegative;
+        prevStepSize = stepSize;
         vc.computeDihedralVertAngles();
         vc.computeEdgePower();
         numIters++;
-
     }
 }
 
@@ -544,7 +614,7 @@ double newtonMethod() { // output is TSC
         for (double i : grad) {
             max = std::max(max, std::abs(i));
         }
-        if (max < 0.001) {
+        if (max < 0.0001) {
             std::cout << "max of " << max << " is small enough; exit \n";
             return TSC;
         }
@@ -595,8 +665,7 @@ double newtonMethod() { // output is TSC
 }
 
 /*! main function for viewer */
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     if (argc < 2)
     {
         printf("Usage: %s input.m\n", argv[0]);
@@ -628,7 +697,10 @@ int main(int argc, char* argv[])
     SYSTEMTIME time1, time2;
     GetSystemTime(&time1);
     if (method == 'G' || method == 'g') {
-        TSC = gradientDescent();
+        std::cout << "Input the stopping iteration number: ";
+        int stop;
+        std::cin >> stop;
+        TSC = gradientDescent(stop);
     }
     else {
         TSC = newtonMethod();
@@ -786,7 +858,7 @@ int main(int argc, char* argv[])
 
     for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
         CCutGraphVertex* v = *viter;
-        v->embPoint()[2] = 20 * abs(v->height());
+        v->embPoint()[2] = abs(v->height());
     }
 
     for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {

@@ -149,6 +149,9 @@ bool MeshLib::CCutGraph::computeCurvature() {
                 double proj01 = sqrt(pow((v0->point() - v1->point()).norm(), 2) - pow(v0->height() - v1->height(), 2));
                 double proj02 = sqrt(pow((v0->point() - v2->point()).norm(), 2) - pow(v0->height() - v2->height(), 2));
                 double proj12 = sqrt(pow((v1->point() - v2->point()).norm(), 2) - pow(v1->height() - v2->height(), 2));
+
+                if (abs((proj01 * proj01 + proj02 * proj02 - proj12 * proj12) / (2 * proj01 * proj02)) > 1) { return false; };
+
                 result += acos((proj01 * proj01 + proj02 * proj02 - proj12 * proj12) / (2 * proj01 * proj02));
             }
 
@@ -263,6 +266,7 @@ void MeshLib::CCutGraph::initGraph() {
             v->boundary() = false;
         }
     }
+
     for (CCutGraphMesh::MeshHalfEdgeIterator heiter(m_pMesh); !heiter.end(); ++heiter) {
         CCutGraphHalfEdge* he = *heiter;
         he->length() = (he->source()->point() - he->target()->point()).norm();
