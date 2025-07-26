@@ -696,14 +696,15 @@ int main(int argc, char* argv[]) {
     std::cin >> method;
 
     SYSTEMTIME time1, time2;
-    GetSystemTime(&time1);
     if (method == 'G' || method == 'g') {
         std::cout << "Input the stopping iteration number: ";
         int stop;
         std::cin >> stop;
+        GetSystemTime(&time1);
         TSC = gradientDescent(stop);
     }
     else {
+        GetSystemTime(&time1);
         TSC = newtonMethod();
     }
     GetSystemTime(&time2);
