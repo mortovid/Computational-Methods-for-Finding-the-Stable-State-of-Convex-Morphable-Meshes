@@ -459,10 +459,6 @@ double gradientDescent(int stop) { // output is TSC
         Eigen::VectorXf grad = computeGrad(&g_mesh); // current gradient
 
         double TSC = vc.computeTSC();
-        if (numIters == stop) {
-            std::cout << grad << "\n";
-            return TSC;
-        }
 
         double max = 0;
         double prevAvg = 0;
@@ -487,6 +483,11 @@ double gradientDescent(int stop) { // output is TSC
 
         std::cout << "Iteration " << numIters << ": the norm is " << grad.norm() << ", the max is " << max << ", the avg is " << prevAvg << ", the past stepSize is " << prevStepSize << ", and the TSC is " << TSC << ". \n";
 
+        if (numIters == stop) {
+            std::cout << grad << "\n";
+            return TSC;
+        }
+
         bool okayToAdvance = false;
         int countAdjustments = 0;
         double stepSize = 1;
@@ -496,24 +497,28 @@ double gradientDescent(int stop) { // output is TSC
                 CCutGraphVertex* v = *viter;
                 if (!v->boundary()) { v->height() += stepSize * grad(v->id() - 1); };
             }
-            vc.computeCurvature();
-            vc.computeDihedralVertAngles();
-            vc.computeEdgePower();
             okayToAdvance = true;
-
-            if (vc.computeTSC() - TSC < 0.1 * stepSize * grad.norm() * grad.norm()) {
-                stepSize /= 1.2;
-                countAdjustments++;
-                okayToAdvance = false;
-            }
+            if (!vc.computeCurvature()) { okayToAdvance = false; }
+            else if (!vc.computeDihedralVertAngles()) { okayToAdvance = false; }
+            else {
+                vc.computeEdgePower();
+                if (vc.computeTSC() - TSC < 0.5 * stepSize * grad.norm() * grad.norm()) {
+                    okayToAdvance = false;
+                }
+            } 
             for (CCutGraphMesh::MeshVertexIterator viter(&g_mesh); !viter.end(); ++viter) {
                 CCutGraphVertex* v = *viter;
                 if (!v->boundary()) { v->height() -= stepSize * grad(v->id() - 1); };
             }
+            
+            if (!okayToAdvance) {
+                countAdjustments++;
+                stepSize /= 2;
+            }
         }
-        if (countAdjustments > 0) {
-            std::cout << countAdjustments << " adjustments to stepSize for line search \n";
-        } 
+        /*if (countAdjustments > 0) {
+            std::cout << countAdjustments << " adjustments to stepSize for line search; stepSize is " << stepSize << "\n";
+        } */
         
         okayToAdvance = false;
         double* cancelNegative = new double[numVertices];
@@ -666,20 +671,16 @@ double newtonMethod() { // output is TSC
 
 /*! main function for viewer */
 int main(int argc, char* argv[]) {
-    if (argc < 2)
-    {
+    if (argc < 2) {
         printf("Usage: %s input.m\n", argv[0]);
         return EXIT_FAILURE;
     }
 
     std::string mesh_name(argv[1]);
 
-    if (strutil::endsWith(mesh_name, ".m"))
-    {
+    if (strutil::endsWith(mesh_name, ".m")) {
         g_mesh.read_m(mesh_name.c_str());
-    }
-    else
-    {
+    } else {
         printf("Only file format .m supported.\n");
         return EXIT_FAILURE;
     }

@@ -193,6 +193,7 @@ bool MeshLib::CCutGraph::computeDihedralVertAngles() { // REDO
         }
         he->diAngle() = std::acos((alt2 * altB) / (alt2.norm() * altB.norm()));
     }
+    return true;
 }
 
 void MeshLib::CCutGraph::computeEdgePower() { // REDO
@@ -221,10 +222,9 @@ double MeshLib::CCutGraph::computeTSC() { // REDO
             result += he->length() * (pi - he->diAngle());
         }
         else {
-            result += he->length() * (pi - he->diAngle() - m_pMesh->halfedgeSym(he)->diAngle());
+            result += he->length() * (pi - he->diAngle() - m_pMesh->halfedgeSym(he)->diAngle()) / 2;
         }
     }
-
     return result;
 }
 
