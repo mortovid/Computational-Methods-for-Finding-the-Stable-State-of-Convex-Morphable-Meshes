@@ -1,25 +1,25 @@
-# Computational Conformal Geometry Homework
+# Computational Methods for Finding the Stable State of Convex Morphable Meshes
 
-This C++ project framework is used to help students to implement geometric algorithms. It contains a halfedge data structure library `MeshLib` and an simple opengl viewer.
+This C++ project is used to convert a disk with a convex polyhedral metric into an isometric convex cap. It contains a halfedge data structure library `MeshLib` and an simple opengl viewer.
 
 ## System
 
-The code is only tested on Windows, but it should work on Linux and Mac with minor midifications. If there is any problem on the latter two platforms, please let me know.
+The code is only tested on Windows, but it should work on Linux and Mac with minor modifications. If there is any problem on the latter two platforms, please let me know.
 
 ## Dependencies
  
 1. `MeshLib`, a mesh library based on halfedge data structure.
 2. `freeglut`, a free-software/open-source alternative to the OpenGL Utility Toolkit (GLUT) library.
+3. `Eigen`, an open-source library used for performing vector and matrix operations.
 
 ## Directory Structure
 
 ``` txt
+3rdPartySoftware        -- MeshLib, freeglut, and Eigen libraries.
 cutgraph/include        -- The header files of cut graph algorithm.
 cutgraph/src            -- The source files of cut graph algorithm. 
 data                    -- Some models.
 CMakeLists.txt          -- CMake configuration file.
-resources               -- Some resources needed.
-3rdparty                -- MeshLib and freeglut libraries.
 ```
 
 ## Configuration
@@ -28,13 +28,13 @@ resources               -- Some resources needed.
 
 1. Install [CMake](https://cmake.org/download/).
 
-2. Download the source code of the C++ framework.
-> E.x. I create a folder `projects` in `C:/`, then unzip the source code there.
+2. Download the source files of the C++ project.
+> E.x. I create a folder `projects` in `C:/`, then unzip the source files there.
 
 3. Configure and generate the project for Visual Studio.
 
 > ``` bash
-> cd CCGHomework
+> cd projecs
 > mkdir build
 > cd build
 > cmake ..
@@ -49,19 +49,16 @@ resources               -- Some resources needed.
 > E.x. 
 > ``` bash
 > cd bin
-> ./CutGraph.exe ../data/torus.m
-> ./CutGraph.exe ../data/eight.m
+> ./CutGraph.exe ../data/trihex+.m
+> ./CutGraph.exe ../data/pentagon.m
 > ```
-> If you can see the following results, then it means that you have finished the cut graph algorithm. 
-> 
-> ![Cut graph of torus](resources/torus_cut_graph.png) ![Cut graph of eight](resources/eight_cut_graph.png)
 
 ### Linux & Mac
 
 1. Build and compile the code.
 
 > ``` bash
-> cd CCGHomework
+> cd projects
 > mkdir build
 > cd build
 > cmake ..
@@ -72,8 +69,8 @@ resources               -- Some resources needed.
 
 > ``` bash
 > cd ../bin/
-> ./CutGraph ../data/torus.m
-> ./CutGraph ../data/eight.m 
+> ./CutGraph ../data/trihex+.m
+> ./CutGraph ../data/pentagon.m 
 > ```
 
 
