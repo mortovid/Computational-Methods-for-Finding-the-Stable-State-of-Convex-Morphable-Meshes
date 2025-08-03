@@ -34,7 +34,7 @@ CMakeLists.txt          -- CMake configuration file.
 3. Configure and generate the project for Visual Studio.
 
 > ``` bash
-> cd projecs
+> cd projects
 > mkdir build
 > cd build
 > cmake ..
