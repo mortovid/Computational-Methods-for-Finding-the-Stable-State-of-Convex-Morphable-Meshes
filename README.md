@@ -4,7 +4,7 @@
 
 This C++ project is used to convert a disk with a convex polyhedral metric into an isometric convex cap. It contains a halfedge data structure library `MeshLib` and an simple opengl viewer.
 
-This project was conducted under the supervision of Professor Gu at Stony Brook University. Help was also provided by Gavin Li.
+This project was conducted under the supervision of Professor Xianfeng Gu (CS Department, Stony Brook University). Help was also provided by Yuanpeng Liu (CS Department, Stony Brook University).
 
 ## System
 
