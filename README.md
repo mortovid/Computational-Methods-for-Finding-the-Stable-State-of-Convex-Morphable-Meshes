@@ -1,6 +1,6 @@
 # Computational Methods for Finding the Stable State of Convex Morphable Meshes
 
-### Author: #### Linhan Shen
+### Author: Linhan Shen
 
 This C++ project is used to convert a disk with a convex polyhedral metric into an isometric convex cap. It contains a halfedge data structure library `MeshLib` and an simple opengl viewer.
 
