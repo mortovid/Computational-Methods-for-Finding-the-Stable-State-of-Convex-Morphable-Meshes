@@ -29,7 +29,7 @@ CMakeLists.txt          -- CMake configuration file.
 1. Install [CMake](https://cmake.org/download/).
 
 2. Download the source files of the C++ project.
-> E.x. I create a folder `projects` in `C:/`, then unzip the source files there.
+> E.x. I create a folder `projects` in `C:/`, then copy the source files there.
 
 3. Configure and generate the project for Visual Studio.
 
